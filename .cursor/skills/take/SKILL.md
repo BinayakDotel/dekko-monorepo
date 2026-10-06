@@ -15,4 +15,4 @@ disable-model-invocation: true
 7. Stop. Do not build.
 
 Token discipline and model table: `.cursor/rules/engineering.mdc`.
-Reply ends with: `Next: /build on Auto, effort Low.`
+Reply ends with: `Next: /implement on Auto, effort Low.`

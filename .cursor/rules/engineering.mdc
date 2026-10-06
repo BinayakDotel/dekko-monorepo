@@ -8,7 +8,7 @@ alwaysApply: true
 - Tickets live in `docs/tasks/<ID>-<slug>.md`; index in `docs/tasks/README.md`.
   Status: todo → in progress → in review → done. Only the skills change status.
 - `/take`: sync, pick ticket, check out its base, grill (max 8 questions), write Decisions + Files. No code.
-- `/build`: TDD with `just test-q`, `just check`, `code-review`, write Outcome, `gt create` + `gt submit`.
+- `/implement`: TDD with `just test-q`, `just check`, `code-review`, write Outcome, `gt create` + `gt submit`.
 - `/address`: fix PR comments on the same branch, `gt modify` + `gt submit`.
 - `/done`: after the human merges, sync, mark done, update the index, name the next ticket.
 - No skill invoked and the request is ticket work: name the skill that fits and stop.
@@ -49,7 +49,7 @@ alwaysApply: true
 | Work | Model | Effort |
 |---|---|---|
 | `/take` | Claude Sonnet 5.5 | Medium |
-| `/build`, `/address`, `/done` | Auto | Low |
+| `/implement`, `/address`, `/done` | Auto | Low |
 | Hard bug after two failed attempts | Claude Opus 5.5 | Medium |
 | Never for routine work | Fable, any High effort | |
 

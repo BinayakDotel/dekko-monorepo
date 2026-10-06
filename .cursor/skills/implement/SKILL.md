@@ -1,10 +1,10 @@
 ---
-name: build
-description: Build the first in-progress ticket with TDD, review, then gt create + gt submit.
+name: implement
+description: Implement the first in-progress ticket with TDD, review, then gt create + gt submit.
 disable-model-invocation: true
 ---
 
-# /build
+# /implement
 
 1. Take the first `in progress` ticket. Read only the ticket and its Files.
 2. If it needs more than ~5 files, split into stacked tickets (each `base` = previous branch) and stop.

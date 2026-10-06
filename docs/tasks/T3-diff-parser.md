@@ -39,7 +39,7 @@ just test-q && just typecheck
 - Skip: lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `Cargo.lock`, `go.sum`, `*.lock`), generated (`*.min.js`, `*.min.css`, `dist/`, `build/`, `.next/`, `*.map`, `*.snap`), and binary diffs — binaries listed in `skippedFiles`.
 - `validateAgainstDiff` → `{ ok: true } | { ok: false; unknownHunkIds: string[] }`, checking ids on components, edges, keyHunks, questions.
 - Export Zod schemas + inferred types for `Hunk` / parse result from `diff.ts`, re-export via `index.ts`.
-- Fixtures: human creates 3 real diffs with `just fixture` before `/build`.
+- Fixtures: human creates 3 real diffs with `just fixture` before `/implement`.
 
 ## Outcome
 Added `parseDiff` and `validateAgainstDiff` in `@dekko/core` so hunks are addressable

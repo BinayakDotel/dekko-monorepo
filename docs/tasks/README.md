@@ -12,4 +12,4 @@
 | T8 | Reveal screen SVG | todo | |
 | T9 | Dogfood week | todo | |
 
-Tickets live in this folder as `<ID>-<slug>.md`. Lifecycle: `/take` → `/build` → `/address` → `/done`.
+Tickets live in this folder as `<ID>-<slug>.md`. Lifecycle: `/take` → `/implement` → `/address` → `/done`.
