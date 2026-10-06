@@ -1,9 +1,9 @@
 ---
 id: T3
 title: Diff parser and validateAgainstDiff
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/3"
 depends: [T2]
 ---
 
@@ -15,6 +15,8 @@ Each Hunk also carries its text. `parseDiff` returns `{ hunks, skippedFiles }`.
 ## Files
 - packages/core/src/schema.ts
 - packages/core/src/index.ts
+- packages/core/src/diff.ts
+- packages/core/test/diff.test.ts
 - docs/SPEC-F1.md
 - docs/DECISIONS.md
 - packages/core/test/fixtures/ (3 real diffs: small, medium, one with a lockfile; create with `just fixture`)
@@ -40,4 +42,8 @@ just test-q && just typecheck
 - Fixtures: human creates 3 real diffs with `just fixture` before `/build`.
 
 ## Outcome
+Added `parseDiff` and `validateAgainstDiff` in `@dekko/core` so hunks are addressable
+(h1..hn) and model citations can be checked before storage. SPEC-F1 documents the parser
+shape and corrects keyHunks to hunkId/why/rank. Risk: no fixture covers `renamed` or
+generated-path skips (logic present; only lockfile + binary exercised).
 

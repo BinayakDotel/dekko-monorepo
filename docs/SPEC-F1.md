@@ -32,9 +32,17 @@ Me, on my own PRs, for the first two weeks. Then five friendly developers.
 
 components[]: id, label, kind, status(added|modified|removed|context), hunks[], confidence
 edges[]: from, to, relation, hunks[], confidence
-keyHunks[]: file, startLine, endLine, why, rank
+keyHunks[]: hunkId, why, rank (1..3)
 questions[]: id, kind, text, expectedAnswer, hunks[]
 summary: string[3]; edgeCase: string
+
+## Diff parsing (packages/core)
+
+`parseDiff(text)` → `{ hunks, skippedFiles }`. Hunk ids are h1..hn in diff order
+(stable per head SHA). Each hunk: id, file, oldStart, oldLines, newStart, newLines,
+kind(added|modified|removed|renamed from file header), text (full hunk incl. @@).
+Lockfiles, generated paths and binary diffs are omitted and listed in skippedFiles.
+`validateAgainstDiff(model, hunks)` → `{ ok: true } | { ok: false; unknownHunkIds }`.
 
 ## API (Convex functions unless noted)
 
