@@ -6,7 +6,7 @@ before merging: Predict → Read → Answer → Reveal.
 ## How we work
 
 - One ticket per chat. Index: [`docs/tasks/README.md`](docs/tasks/README.md).
-- Lifecycle skills: `/take` → `/build` → `/address` → `/done` (see `.cursor/skills/`).
+- Lifecycle skills: `/take` → `/implement` → `/address` → `/done` (see `.cursor/skills/`).
 - Always-on rule: `.cursor/rules/engineering.mdc`. Path-scoped rules load by file.
 - Spec: `docs/SPEC-F1.md`. Decisions: `docs/DECISIONS.md`. Vocabulary: `CONTEXT.md`.
 - Secrets in `.env.local` only. Never read or print them.

@@ -9,7 +9,7 @@ GitHub-centric tool: prove you understand a PR before merging — Predict → Re
 | Skill | What it does |
 |---|---|
 | `/take` | Pick a `todo` ticket, grill decisions (max 8), write Decisions + Files. No code. |
-| `/build` | TDD the `in progress` ticket, review, open a PR via Graphite. |
+| `/implement` | TDD the `in progress` ticket, review, open a PR via Graphite. |
 | `/address` | Fix PR review comments on the same branch. |
 | `/done` | After you merge: mark tickets done, name the next one. |
 

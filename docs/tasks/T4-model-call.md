@@ -38,8 +38,8 @@ just test-q
 - Prompt budget: pack hunks in id order `h1…hn` until ≤60k characters of hunk payload; drop from the end. Title/body included when present, treated as untrusted. Never send lockfiles/generated (already stripped by `parseDiff`).
 - Layout: system prompt in `packages/core/src/prompts/analyze.ts`; logic + env adapter in `packages/core/src/ai/analyze.ts`; test beside it. Re-export `analyze` (+ result types) from `@dekko/core`.
 - Deps (why): add `ai`, `@ai-sdk/groq`, `@ai-sdk/anthropic` to `@dekko/core` — required to call the Vercel AI SDK with the two providers from this package. `tsx` for `just analyze`. `allowBuilds.esbuild` so vitest/tsx postinstall runs.
-- Manual: `just analyze <path-to-diff>` is a documented one-liner (tsx/node against the library + env); not a polished script surface. Human runs it once on a fixture after `/build`.
-- System prompt: draft approved in `/take` (2026-10-06); `/build` writes `packages/core/src/prompts/analyze.ts` as shown.
+- Manual: `just analyze <path-to-diff>` is a documented one-liner (tsx/node against the library + env); not a polished script surface. Human runs it once on a fixture after `/implement`.
+- System prompt: draft approved in `/take` (2026-10-06); `/implement` writes `packages/core/src/prompts/analyze.ts` as shown.
 
 ## Outcome
 Added `analyze` in `@dekko/core` so callers get a validated ChangeModel from Groq or Anthropic (or an injected mock), with 60k hunk packing, up to 3 validation retries, and summed usage. Risk: Anthropic default id `claude-sonnet-5-5` may need a dated API id when the first real call runs.
