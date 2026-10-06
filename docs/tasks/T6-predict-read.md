@@ -1,9 +1,9 @@
 ---
 id: T6
 title: Predict backend (decoys, scoring, sessions)
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/7"
 depends: [T5]
 ---
 
@@ -17,12 +17,12 @@ on `changeModels`, and `startSession` / `getSession` in Convex. UI is T6b (Predi
 - packages/core/src/predict.test.ts (new)
 - packages/core/src/index.ts (export predict)
 - apps/web/convex/schema.ts (changeModels: optional `title`, `files`; sessions: typed `predictionScore`)
-- apps/web/convex/briefs.ts (store title + files in `analyzePr`; `getBrief` returns title, files, chips; add `startSession`, `getSession`)
+- apps/web/convex/briefs.ts (store title + files in `analyzePr`; `getPredictView` / locked `getBrief`; add `startSession`, `getSession`)
 
 ## Done when
 `just test-q` covers `pickDecoys` and `scorePrediction`. From the Convex dashboard: re-analyze one PR
-with `force`, `getBrief` returns title, files and chips, `startSession` stores a scored session,
-`getSession` returns it.
+with `force`, `getPredictView` returns title/files/chips only, `getBrief(sessionId)` returns the full
+brief after lock, `startSession` stores a scored session, `getSession` returns it.
 
 ## Verify
 `just check`; manual run in the Convex dashboard on one PR.
@@ -40,7 +40,7 @@ with `force`, `getBrief` returns title, files and chips, `startSession` stores a
   - Duplicate picks count once; output order is stable (sorted).
 - **Decoys** (`pickDecoys`): pure function in core, deterministic from `changeModelId` (seeded shuffle, no `Math.random`). Use the model's `context` components first. Then fill up to 3 with labels made from file paths that no affected component cites. Never take names from a fixed generic pool.
   - The repo tree isn't fetched, so "unchanged file paths" means PR files that no affected component's hunks touch. The label is the parent folder or file stem, made kebab-case, skipping any that clash with a real component id. If fewer than 3 candidates exist, show fewer.
-- Chips = affected components + decoys, in a deterministic shuffle so real ones aren't listed first. `getBrief` returns `chips: { id, label }[]` and never says which chips are decoys.
+- Chips = affected components + decoys, in a deterministic shuffle so real ones aren't listed first. `getPredictView(changeModelId)` returns only `{ title, files, chips }` (never the model). `getBrief(sessionId)` returns the full brief (model + cited hunks + chips) and requires a session whose prediction is already locked via `startSession`.
 - `analyzePr` stores `title` and `files: { path, kind }[]` from the parsed diff, plus skipped files. Both fields are optional in the schema so older docs still validate; re-run old PRs with `force: true`.
 - `startSession({ changeModelId, predictionText, predictedComponents })`: the mutation recomputes chips and the score on the server (it never trusts a client-sent score) and inserts with `userId: "local"`, `answers: []`, `startedAt`. It rejects an empty pick list or ids that aren't chips. The prediction is locked: there's no update mutation.
 - `getSession(sessionId)` returns the session plus `changeModelId`. The score is stored now but the UI shows it only on Reveal (T8).
@@ -49,3 +49,6 @@ with `force`, `getBrief` returns title, files and chips, `startSession` stores a
 - No auth: `userId` is the constant `"local"`. "Show the whole diff" is out of scope.
 
 ## Outcome
+Added `@dekko/core` `pickDecoys` / `scorePrediction` / `buildChips` (seeded, no `Math.random`) with unit tests, and Convex `title`/`files` on briefs plus typed `predictionScore`, `startSession`, and `getSession`. `getPredictView` returns title/files/chips only; `getBrief(sessionId)` returns the full model after lock.
+
+Risk: Skipped-only files are stored with kind `modified` because `parseDiff` does not return their header kind. No `convex-test` yet (not in package).

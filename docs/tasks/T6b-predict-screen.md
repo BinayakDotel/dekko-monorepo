@@ -15,7 +15,7 @@ Paste a PR URL on `/`, land on `/brief/[changeModelId]`, write one sentence, tic
 - apps/web/app/ConvexClientProvider.tsx (new, "use client")
 - apps/web/app/layout.tsx (wrap in provider)
 - apps/web/app/page.tsx (replace template with URL form → `analyzePr`)
-- apps/web/app/brief/[changeModelId]/page.tsx (new: Predict, `getBrief` + `startSession`)
+- apps/web/app/brief/[changeModelId]/page.tsx (new: Predict, `getPredictView` + `startSession`)
 
 ## Done when
 Manual: the URL form analyzes a PR and opens Predict. The title, file list and chips render. The lock
