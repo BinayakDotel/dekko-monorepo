@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Instrument_Sans, Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
+import { ConvexClientProvider } from "./ConvexClientProvider";
 import "./globals.css";
 
 const sans = Instrument_Sans({ subsets: ["latin"], variable: "--font-sans" });
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${sans.variable} ${display.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ConvexClientProvider>{children}</ConvexClientProvider>
+      </body>
     </html>
   );
 }

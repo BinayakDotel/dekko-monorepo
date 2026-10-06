@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { ChangeModel, Component } from "./schema";
 import {
   buildChips,
+  canLockPrediction,
   pickDecoys,
   scorePrediction,
   type PickDecoysInput,
@@ -240,5 +241,25 @@ describe("buildChips", () => {
         .join(","),
     );
     expect(new Set(orders).size).toBeGreaterThan(1);
+  });
+});
+
+describe("canLockPrediction", () => {
+  test("is false with no chips even when text is long enough", () => {
+    expect(
+      canLockPrediction({ predictionText: "twelve chars", picked: [] }),
+    ).toBe(false);
+  });
+
+  test("is false when trimmed text is under 10 characters", () => {
+    expect(
+      canLockPrediction({ predictionText: "  short  ", picked: ["auth"] }),
+    ).toBe(false);
+  });
+
+  test("is true with at least one chip and trimmed text of 10+ characters", () => {
+    expect(
+      canLockPrediction({ predictionText: "  ten chars.  ", picked: ["auth"] }),
+    ).toBe(true);
   });
 });
