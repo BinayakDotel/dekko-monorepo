@@ -1,7 +1,7 @@
 ---
 id: T4
 title: Model call analyze.ts
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/5"
 depends: [T3]
