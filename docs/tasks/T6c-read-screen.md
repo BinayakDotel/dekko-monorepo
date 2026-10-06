@@ -1,9 +1,9 @@
 ---
 id: T6c
 title: Brief chrome + Predict matches prototype
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/9"
 depends: [T6b]
 ---
 
@@ -39,3 +39,4 @@ Manual: Predict looks the same as the prototype's Predict screen, and locking st
   Tokens only, no hex.
 
 ## Outcome
+Extracted presentational `BriefChrome` (title, step 0–3, timeLabel, children column) and moved Predict onto it. Aligned Predict spacing/type with `docs/design/prototype.html` (brand 1.35rem, question line-height 1.3, textarea/chip/file gaps). Moved prototype path `docs/designs/` → `docs/design/`. Lock still routes to `/session/[sessionId]/read/0`. Risk: visual match is manual-only until T6d reuses the chrome.
