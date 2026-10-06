@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en" data-dir="A" data-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dekko prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Outfit:wght@500;600;700&family=Albert+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- tokens: 3 directions x 2 modes ---------- */
+:root{--font:"Instrument Sans",system-ui,sans-serif;--font-display:"Instrument Serif",Georgia,serif;--font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+ --fs:.95rem;--q:1.3rem;--q-w:400;--mark-w:400;--r:10px;--chip-r:999px;--btn-r:9px;--pad:2rem 1.5rem 2.6rem;
+ --shell:#F0F2EF;--surface:#FFFFFF;--field:#F3F4F1;--ink:#1B2430;--muted:#6B7480;--line:#D9DED9;--line-2:#ECEFEB;
+ --accent:#1F4E9E;--accent-ink:#FFFFFF;--accent-soft:#E6EDFB;--accent-on-soft:#1F4E9E;
+ --ok:#1E7A4F;--ok-soft:#E3F5EA;--warn:#B45309;--warn-soft:#FFF3D9;--bad:#B91C1C;--bad-soft:#FDE4E4;--map-bg:#FFFFFF;--overlay:rgba(20,26,34,.45);
+ box-sizing:border-box}
+:root[data-dir="A"][data-mode="dark"]{--shell:#111519;--surface:#181D22;--field:#20262C;--ink:#E6EAEE;--muted:#98A3AE;--line:#2C3339;--line-2:#242A30;
+ --accent:#8FB0FF;--accent-ink:#0E1626;--accent-soft:#1E2A45;--accent-on-soft:#B8CBFF;--ok:#5FD08F;--ok-soft:#16301F;--warn:#F0B458;--warn-soft:#33270F;--bad:#F38A8A;--bad-soft:#3A1A1A;--map-bg:#121619;--overlay:rgba(0,0,0,.6)}
+:root[data-dir="B"]{--font:"IBM Plex Sans",system-ui,sans-serif;--font-display:"IBM Plex Mono",ui-monospace,monospace;--fs:.9rem;--q:1.05rem;--q-w:600;--mark-w:600;--r:6px;--chip-r:6px;--btn-r:6px;--pad:1.5rem 1.3rem 2.2rem}
+:root[data-dir="B"][data-mode="light"]{--shell:#EEF1F4;--surface:#FFFFFF;--field:#F2F4F6;--ink:#1A2026;--muted:#66717C;--line:#D5DBE1;--line-2:#E6EAEE;
+ --accent:#B86E00;--accent-ink:#FFFFFF;--accent-soft:#FDF1DC;--accent-on-soft:#8A5200;--ok:#1E7A4F;--ok-soft:#E3F5EA;--warn:#B45309;--warn-soft:#FFF3D9;--bad:#B91C1C;--bad-soft:#FDE4E4;--map-bg:#FAFBFC;--overlay:rgba(20,26,34,.45)}
+:root[data-dir="B"][data-mode="dark"]{--shell:#101417;--surface:#171C21;--field:#1F252B;--ink:#E8ECEF;--muted:#8E9AA6;--line:#2B333B;--line-2:#242B32;
+ --accent:#F0B35B;--accent-ink:#1A1206;--accent-soft:#2E2715;--accent-on-soft:#F0B35B;--ok:#58C48C;--ok-soft:#173224;--warn:#F0B35B;--warn-soft:#2E2715;--bad:#F27D7D;--bad-soft:#3A1A1A;--map-bg:#12171B;--overlay:rgba(0,0,0,.6)}
+:root[data-dir="C"]{--font:"Figtree",system-ui,sans-serif;--font-display:"Bricolage Grotesque","Figtree",sans-serif;--fs:.98rem;--q:1.35rem;--q-w:700;--mark-w:800;--r:16px;--chip-r:999px;--btn-r:999px;--pad:2.2rem 1.7rem 2.8rem}
+:root[data-dir="C"][data-mode="light"]{--shell:#F1EEFB;--surface:#FFFFFF;--field:#F4F1FD;--ink:#1D1A33;--muted:#6E6A8A;--line:#E1DCF3;--line-2:#EEEBF8;
+ --accent:#5B3DF5;--accent-ink:#FFFFFF;--accent-soft:#EDE8FF;--accent-on-soft:#4A2ED6;--ok:#1D9A5E;--ok-soft:#E0F7EA;--warn:#D98A00;--warn-soft:#FFF1D6;--bad:#E0405E;--bad-soft:#FFE1E7;--map-bg:#FBFAFF;--overlay:rgba(29,26,51,.45)}
+:root[data-dir="C"][data-mode="dark"]{--shell:#13112A;--surface:#1A1730;--field:#241F40;--ink:#ECE9FA;--muted:#A39FC2;--line:#37325A;--line-2:#2D2850;
+ --accent:#A78BFF;--accent-ink:#1A1730;--accent-soft:#2E2757;--accent-on-soft:#C9B8FF;--ok:#5FD08F;--ok-soft:#16301F;--warn:#F0B458;--warn-soft:#33270F;--bad:#F58AA0;--bad-soft:#3A1A24;--map-bg:#15122A;--overlay:rgba(0,0,0,.6)}
+
+/* ---------- D: Lagoon (aqua on warm neutral, Manrope) ---------- */
+:root[data-dir="D"]{--font:"Manrope",system-ui,sans-serif;--font-display:"Manrope",system-ui,sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,monospace;--fs:.95rem;--q:1.25rem;--q-w:700;--mark-w:800;--r:12px;--chip-r:999px;--btn-r:10px;--pad:2rem 1.5rem 2.6rem}
+:root[data-dir="D"][data-mode="light"]{--shell:#F4F6F5;--surface:#FFFFFF;--field:#F0F4F3;--ink:#132524;--muted:#5E6E6C;--line:#D5DEDC;--line-2:#E6ECEA;
+ --accent:#0F9F94;--accent-ink:#FFFFFF;--accent-soft:#DCF4F0;--accent-on-soft:#0B6F68;--ok:#1E7A4F;--ok-soft:#E1F4E8;--warn:#B45309;--warn-soft:#FFF1D8;--bad:#B91C1C;--bad-soft:#FDE4E4;--map-bg:#FFFFFF;--overlay:rgba(19,37,36,.45)}
+:root[data-dir="D"][data-mode="dark"]{--shell:#0E1716;--surface:#142020;--field:#1B2929;--ink:#E3EEEC;--muted:#8FA5A2;--line:#27393A;--line-2:#203131;
+ --accent:#3DD6C8;--accent-ink:#062321;--accent-soft:#123A38;--accent-on-soft:#7FE8DD;--ok:#5FD08F;--ok-soft:#16301F;--warn:#F0B458;--warn-soft:#33270F;--bad:#F38A8A;--bad-soft:#3A1A1A;--map-bg:#0F1A19;--overlay:rgba(0,0,0,.6)}
+/* ---------- E: Ultramarine (electric blue on cool neutral, Geist) ---------- */
+:root[data-dir="E"]{--font:"Geist",system-ui,sans-serif;--font-display:"Geist",system-ui,sans-serif;--font-mono:"Geist Mono",ui-monospace,monospace;--fs:.94rem;--q:1.2rem;--q-w:600;--mark-w:700;--r:8px;--chip-r:8px;--btn-r:8px;--pad:1.9rem 1.5rem 2.6rem}
+:root[data-dir="E"][data-mode="light"]{--shell:#F3F4F8;--surface:#FFFFFF;--field:#F1F2F7;--ink:#141A2E;--muted:#626A86;--line:#D9DCE8;--line-2:#E8EAF2;
+ --accent:#2F3BE0;--accent-ink:#FFFFFF;--accent-soft:#E8EAFD;--accent-on-soft:#2630B8;--ok:#1E7A4F;--ok-soft:#E1F4E8;--warn:#B45309;--warn-soft:#FFF1D8;--bad:#B91C1C;--bad-soft:#FDE4E4;--map-bg:#FFFFFF;--overlay:rgba(20,26,46,.45)}
+:root[data-dir="E"][data-mode="dark"]{--shell:#0F1120;--surface:#161A2E;--field:#1D2238;--ink:#E7E9F5;--muted:#9AA0C2;--line:#2B3150;--line-2:#232946;
+ --accent:#7C86FF;--accent-ink:#0E1230;--accent-soft:#22284F;--accent-on-soft:#B3B9FF;--ok:#5FD08F;--ok-soft:#16301F;--warn:#F0B458;--warn-soft:#33270F;--bad:#F38A8A;--bad-soft:#3A1A1A;--map-bg:#111428;--overlay:rgba(0,0,0,.6)}
+/* ---------- F: Magenta (one vivid accent on quiet warm grey, Outfit + Albert Sans) ---------- */
+:root[data-dir="F"]{--font:"Albert Sans",system-ui,sans-serif;--font-display:"Outfit",system-ui,sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,monospace;--fs:.96rem;--q:1.3rem;--q-w:600;--mark-w:700;--r:12px;--chip-r:999px;--btn-r:12px;--pad:2.1rem 1.6rem 2.7rem}
+:root[data-dir="F"][data-mode="light"]{--shell:#F8F6F7;--surface:#FFFFFF;--field:#F3EFF2;--ink:#231B21;--muted:#6F6470;--line:#E2DADF;--line-2:#EEE8EC;
+ --accent:#C9247A;--accent-ink:#FFFFFF;--accent-soft:#FBE3F0;--accent-on-soft:#A31862;--ok:#1E7A4F;--ok-soft:#E1F4E8;--warn:#B45309;--warn-soft:#FFF1D8;--bad:#B91C1C;--bad-soft:#FDE4E4;--map-bg:#FFFFFF;--overlay:rgba(35,27,33,.45)}
+:root[data-dir="F"][data-mode="dark"]{--shell:#161117;--surface:#1E181F;--field:#262028;--ink:#F1E9EE;--muted:#A8979F;--line:#3A2F36;--line-2:#2E252B;
+ --accent:#FF6AB5;--accent-ink:#2A0F1E;--accent-soft:#3B1A2E;--accent-on-soft:#FFA6D2;--ok:#5FD08F;--ok-soft:#16301F;--warn:#F0B458;--warn-soft:#33270F;--bad:#F38A8A;--bad-soft:#3A1A1A;--map-bg:#17121A;--overlay:rgba(0,0,0,.6)}
+
+/* ---------- base ---------- */
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--shell);color:var(--ink);font-family:var(--font);font-size:var(--fs);line-height:1.55;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+a{color:var(--accent)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- shell ---------- */
+.app{display:flex;height:100%;min-height:0}
+.side{width:224px;flex:0 0 224px;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;padding:1rem .9rem}
+.brand{font-family:var(--font-display);font-size:1.35rem;font-weight:var(--mark-w);padding:.3rem .5rem .9rem}
+.repo{font-size:.82rem;color:var(--muted);padding:0 .5rem .9rem;border-bottom:1px solid var(--line-2);margin-bottom:.6rem}
+.nav a{display:flex;align-items:center;gap:.5rem;padding:.5rem .6rem;border-radius:var(--r);color:var(--ink);text-decoration:none;font-size:.92rem}
+.nav a.cur{background:var(--accent-soft);color:var(--accent-on-soft);font-weight:600}
+.nav .badge{margin-left:auto;font-size:.74rem;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:.05rem .45rem;color:var(--muted)}
+.side .user{margin-top:auto;font-size:.82rem;color:var(--muted);padding:.6rem .5rem;border-top:1px solid var(--line-2)}
+main{flex:1;min-width:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.mobilebar{display:none}
+@media (max-width:860px){
+  .side{display:none}
+  .mobilebar{display:flex;gap:.3rem;align-items:center;padding:.5rem .6rem;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:5}
+  .mobilebar .brand{font-size:1.1rem;padding:0 .4rem;margin-right:.4rem}
+  .mobilebar a{text-decoration:none;color:var(--ink);padding:.3rem .6rem;border-radius:999px;font-size:.84rem}
+  .mobilebar a.cur{background:var(--accent-soft);color:var(--accent-on-soft);font-weight:600}
+}
+
+/* ---------- pages ---------- */
+.page{max-width:900px;margin:0 auto;padding:1.6rem 1.4rem 4rem}
+.page h1{font-family:var(--font-display);font-weight:var(--q-w);font-size:1.7rem;margin:0 0 .3rem}
+.page .sub{color:var(--muted);margin:0 0 1.4rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.prlist{list-style:none;padding:0;margin:0}
+.prlist li{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;padding:.9rem 1rem;border-bottom:1px solid var(--line-2)}
+.prlist li:last-child{border-bottom:0}
+.prlist .title{flex:1 1 260px;font-weight:600}
+.prlist .meta{color:var(--muted);font-size:.84rem;flex:1 1 220px}
+.pill{font-size:.76rem;font-weight:600;padding:.12rem .55rem;border-radius:999px;background:var(--field);color:var(--muted);border:1px solid var(--line)}
+.pill.req{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.done{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pill.ai{background:var(--accent-soft);color:var(--accent-on-soft);border-color:transparent}
+.btn{display:inline-flex;align-items:center;gap:.4rem;font-weight:600;font-size:.9rem;padding:.6rem 1.1rem;border-radius:var(--btn-r);background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.btn.sm{padding:.4rem .8rem;font-size:.84rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.link{color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-size:.9rem}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem 1.2rem}
+.small{color:var(--muted);font-size:.8rem}
+
+/* ---------- brief ---------- */
+.brief{max-width:640px;margin:0 auto;padding:var(--pad)}
+.brief-top{display:flex;align-items:center;gap:.9rem;padding:.7rem 1.2rem;border-bottom:1px solid var(--line-2);background:var(--surface);position:sticky;top:0;z-index:4}
+.brief-top .ctx{color:var(--muted);font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.steps{margin-left:auto;display:flex;gap:.3rem}.steps i{width:22px;height:4px;border-radius:2px;background:var(--line);display:inline-block}.steps i.on{background:var(--accent)}.steps i.done{background:var(--ok)}
+.time{color:var(--muted);font-size:.78rem;white-space:nowrap}
+.step{color:var(--muted);font-size:.84rem;margin:0 0 .45rem}
+.q{font-family:var(--font-display);font-size:var(--q);font-weight:var(--q-w);line-height:1.3;margin:0 0 .5rem}
+.hint{color:var(--muted);font-size:.88rem;margin:0 0 .9rem}
+textarea.input,.input{width:100%;border:1px solid var(--line);border-radius:var(--r);padding:.75rem .95rem;background:var(--field);color:var(--ink);font:inherit;resize:vertical;min-height:3.2rem;margin:0 0 1.4rem}
+textarea.input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.5rem}
+.chip{border:1px solid var(--line);border-radius:var(--chip-r);padding:.35rem .85rem;font-size:.88rem;background:var(--surface);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-on-soft);font-weight:600}
+.chip[aria-pressed="true"]::before{content:"✓ "}
+.files{color:var(--muted);font-size:.88rem;margin:0 0 1.2rem}
+.filelist{display:none;list-style:none;padding:.6rem .9rem;margin:.4rem 0 1rem;background:var(--field);border-radius:var(--r);font-family:var(--font-mono);font-size:.78rem;line-height:1.7}
+.filelist.open{display:block}
+.filelist .a{color:var(--ok)}.filelist .m{color:var(--warn)}
+.lead{font-size:1.02rem;margin:0 0 .9rem}
+.code{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0 0 1.2rem;background:var(--surface)}
+.code .file{display:flex;justify-content:space-between;gap:1rem;padding:.45rem .9rem;font-family:var(--font-mono);font-size:.76rem;color:var(--muted);background:var(--field);border-bottom:1px solid var(--line-2)}
+.code pre{margin:0;padding:.7rem .9rem;font-family:var(--font-mono);font-size:.78rem;line-height:1.6;overflow-x:auto}
+.code .ln{display:inline-block;width:2.2em;color:var(--muted);user-select:none}
+.code .add{background:var(--ok-soft)}
+.code .hl{box-shadow:inset 3px 0 0 var(--warn)}
+.fb{border-radius:var(--r);padding:.85rem 1rem;margin:0 0 1.4rem;background:var(--warn-soft);font-size:.92rem}
+.fb.ok{background:var(--ok-soft)}.fb.bad{background:var(--bad-soft)}
+.fb b{display:block;margin-bottom:.15rem}
+.result{font-family:var(--font-display);font-size:var(--q);font-weight:var(--q-w);margin:0 0 .9rem}
+.mapbox{border:1px solid var(--line);border-radius:var(--r);background:var(--map-bg);padding:.6rem;margin:0 0 .8rem;overflow-x:auto}
+.mapbox svg{width:100%;height:auto;display:block;min-width:360px}
+.nl{font-family:var(--font);font-size:12.5px;font-weight:600;text-anchor:middle;fill:var(--ink)}
+.ns{font-family:var(--font);font-size:10.5px;text-anchor:middle;fill:var(--muted)}
+.bt{font-family:var(--font);font-size:10px;font-weight:700;text-anchor:middle;fill:#fff}
+.n{cursor:pointer}
+.n-add rect{fill:var(--ok-soft);stroke:var(--ok);stroke-width:1.5}.n-mod rect{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.5}
+.n-ctx rect{fill:var(--field);stroke:var(--line);stroke-width:1.5}.n-none rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 4}
+.b-hit{fill:var(--ok)}.b-miss{fill:var(--bad)}.b-false{fill:var(--warn)}.b-hide{display:none}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem 1.1rem;font-size:.8rem;color:var(--muted);margin:0 0 1.2rem}
+.legend span{display:inline-flex;align-items:center;gap:.35rem}.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.list{list-style:none;padding:0;margin:0 0 1.4rem;border-top:1px solid var(--line-2)}
+.list li{display:flex;align-items:flex-start;gap:.8rem;padding:.7rem 0;border-bottom:1px solid var(--line-2);font-size:.92rem;cursor:pointer}
+.list .ic{width:22px;height:22px;border-radius:50%;flex:0 0 22px;display:inline-flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:700;color:#fff;margin-top:.1rem}
+.ic.miss{background:var(--bad)}.ic.hit{background:var(--ok)}.ic.false{background:var(--warn)}
+.list .t{flex:1}.list .t b{display:block}.list .t span{color:var(--muted)}
+.list .chev{color:var(--muted);align-self:center}
+
+/* ---------- done ---------- */
+.done{text-align:center;padding:2rem 0 1rem}
+.done .big{font-family:var(--font-display);font-size:2.2rem;line-height:1.1;margin:0 0 .7rem;font-weight:var(--q-w)}
+.done p{margin:0 auto .5rem;max-width:40ch}
+.done .row{justify-content:center;margin-top:1.4rem}
+
+/* ---------- team / settings ---------- */
+.kpi{display:flex;flex-wrap:wrap;gap:1.4rem 2.5rem;margin:0 0 1.6rem}
+.kpi div b{display:block;font-family:var(--font-display);font-size:2rem;line-height:1;font-weight:var(--q-w)}
+.kpi div span{color:var(--muted);font-size:.86rem}
+.area{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem 1rem;padding:.9rem 1rem;border-top:1px solid var(--line-2)}
+.area:first-child{border-top:0}
+.area code{font-family:var(--font-mono);font-size:.84rem}
+.area .bar{flex:1 1 140px;height:8px;background:var(--field);border-radius:4px;overflow:hidden;min-width:120px}
+.area .bar i{display:block;height:100%;border-radius:4px}
+.area .txt{flex:1 1 260px;font-size:.88rem;color:var(--muted)}
+.set{padding:1rem;border-top:1px solid var(--line-2)}
+.set:first-child{border-top:0}
+.set b{display:block;margin-bottom:.15rem}
+.toggle{display:inline-block;width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;vertical-align:middle;margin-right:.6rem;transition:background .15s}
+.toggle::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle[aria-checked="true"]{background:var(--ok)}.toggle[aria-checked="true"]::after{left:19px}
+.radio{display:flex;flex-wrap:wrap;gap:.6rem;margin:.4rem 0 0}
+.radio button{border:1px solid var(--line);border-radius:999px;padding:.3rem .8rem;font-size:.86rem}
+.radio button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-on-soft);font-weight:600}
+
+/* ---------- sheet ---------- */
+.scrim{position:fixed;inset:0;background:var(--overlay);display:none;z-index:20}
+.scrim.open{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:var(--r) var(--r) 0 0;z-index:21;transform:translateY(105%);transition:transform .2s ease;padding-bottom:env(safe-area-inset-bottom,0px);max-height:80%;overflow:auto}
+.sheet.open{transform:translateY(0)}
+.sheet .head{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1.2rem;border-bottom:1px solid var(--line-2)}
+.sheet .head b{font-size:1rem}
+.sheet .in{padding:1rem 1.2rem 1.3rem}
+.conf{display:flex;align-items:center;gap:.6rem;font-size:.88rem;color:var(--muted);margin:0 0 .8rem}
+.conf i{height:6px;width:120px;background:var(--field);border-radius:3px;position:relative;display:inline-block}
+.conf i::after{content:"";position:absolute;left:0;top:0;height:100%;width:var(--w,90%);background:var(--ok);border-radius:3px}
+.tag{font-weight:600}.tag.warn{color:var(--warn)}
+
+/* ---------- prototype controls ---------- */
+.proto{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.5rem .6rem;display:flex;gap:.35rem;align-items:center;font-size:.78rem;box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.proto span{color:var(--muted);margin-right:.2rem}
+.proto button{border:1px solid var(--line);border-radius:6px;padding:.25rem .5rem;font-weight:600}
+.proto button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">Dekko</div>
+    <div class="repo">finlabs / core</div>
+    <nav class="nav" id="nav"></nav>
+    <div class="user">ravi-k · signed in with GitHub</div>
+  </aside>
+  <main id="main" tabindex="-1">
+    <div class="mobilebar" id="mobilebar"></div>
+    <div id="view"></div>
+  </main>
+</div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
+<div class="proto" aria-label="Prototype controls">
+  <span>Look</span>
+  <button data-dir="A" aria-pressed="true">A</button><button data-dir="B" aria-pressed="false">B</button><button data-dir="C" aria-pressed="false">C</button><button data-dir="D" aria-pressed="false">D</button><button data-dir="E" aria-pressed="false">E</button><button data-dir="F" aria-pressed="false">F</button>
+  <span style="margin-left:.4rem">Mode</span>
+  <button data-mode="light" aria-pressed="true">Light</button><button data-mode="dark" aria-pressed="false">Dark</button>
+  <button id="reset" title="Clear prototype state">Reset</button>
+</div>
+
+<script>
+// ---------- data ----------
+const PRS = [
+  {n:412, title:"Add refund flow", by:"ravi-k", files:14, agent:"Claude Code, 6 of 7 commits", required:true, area:"src/payments"},
+  {n:418, title:"Ledger reconciliation job", by:"maya-c", files:6, agent:"unknown", required:true, area:"src/payments"},
+  {n:421, title:"Rename notification templates", by:"ravi-k", files:3, agent:"Cursor, 2 of 2 commits", required:false, area:"src/notifications"},
+  {n:409, title:"Bump dependencies", by:"renovate[bot]", files:2, agent:"bot", required:false, area:"root", trivial:true},
+];
+const COMPONENTS = ["RefundsController","LedgerService","NotificationQueue","AuditLog","PaymentRepository","FraudCheck","Stripe client","refunds table"];
+const AFFECTED = new Set(["RefundsController","LedgerService","NotificationQueue","AuditLog","refunds table"]);
+const HUNKS = [
+  {file:"src/payments/RefundsController.ts", lines:"12–16", why:"Refunds can be retried by clients. This key is the only thing stopping a double refund.",
+   code:[[12,"export async function createRefund(req: Request) {",""],[13,'  const key = req.headers["idempotency-key"];',"add"],[14,'  if (!key) return badRequest("Missing idempotency key");',"add"],[15,"  const existing = await refunds.findByKey(key);","add"],[16,"  if (existing) return ok(existing);","add"]]},
+  {file:"src/payments/LedgerService.ts", lines:"84–90", why:"Two writes and a publish, with nothing holding them together. Look at what happens if the last one fails.",
+   code:[[84,"async recordRefund(input: RefundInput) {",""],[85,'  const entry = await this.repo.insertEntry({ ...input, type: "refund" });',"add"],[86,'  await this.repo.insertEntry({ ...input, type: "reversal", sign: -1 });',"add"],[87,'  await auditLog.record("refund.recorded", entry.id);',"add"],[88,'  await queue.publish("refund.issued", { id: entry.id, amount: input.amount });',"add hl"],[89,"  return entry;","add"],[90,"}",""]]},
+  {file:"src/notifications/queue.ts", lines:"40–42", why:"This is new. The refund flow now depends on the notification queue being up.",
+   code:[[40,"export async function publish(topic: string, payload: unknown) {","add"],[41,"  await client.send(topic, JSON.stringify(payload));","add"],[42,"}","add"]]},
+];
+const QUESTIONS = [
+  {q:"When a refund is created, which records are written, and in what order?", keys:["ledger","reversal","audit","queue","publish"],
+   right:"That's the order in LedgerService.ts lines 85 to 88: refund entry, reversal entry, audit record, then the queue message.",
+   partly:"Close. The order is refund entry, reversal entry, audit record, then a message to the queue (lines 85 to 88).",
+   ref:"LedgerService.ts 85–88"},
+  {q:"If the ledger write on line 85 succeeds but the publish on line 88 fails, what does the customer experience?", keys:["notif","retry","transaction","never told","no message","inconsistent"],
+   right:"Right. The money moves, but no refund.issued message goes out, so the customer is never told, and nothing retries.",
+   partly:"Partly right. The money moves, but no refund.issued message goes out, so the customer is never told, and nothing retries. The three steps aren't in a transaction.",
+   ref:"LedgerService.ts 84–88"},
+  {q:"A customer says they were refunded twice. Which file do you open first, and what do you look for?", keys:["idempotency","refundscontroller","findbykey","header"],
+   right:"Right. RefundsController.ts, the idempotency key check on lines 13 to 16. Also check that clients send the header; line 14 rejects requests without one.",
+   partly:"The place to start is RefundsController.ts, lines 13 to 16: the idempotency key check. If a client omits the header, line 14 rejects the request.",
+   ref:"RefundsController.ts 13–16"},
+];
+const EVIDENCE = {
+  LedgerService:{title:"LedgerService publishes to NotificationQueue", rel:"publishes refund.issued", conf:"0.94, from an explicit call in the diff", w:94, file:"src/payments/LedgerService.ts", line:88, code:'await queue.publish("refund.issued", { id: entry.id, amount: input.amount });', rule:"payments shouldn't import notifications directly. Emit an event instead.", down:"notifications/handlers/refund.ts reads this message and expects refundId, which this PR renamed to id."},
+  NotificationQueue:{title:"NotificationQueue is modified", rel:"new publish() helper", conf:"0.96, new file section", w:96, file:"src/notifications/queue.ts", line:40, code:"export async function publish(topic: string, payload: unknown) {", rule:"", down:"Any consumer of refund.issued now depends on this helper."},
+  AuditLog:{title:"AuditLog gains a refund record", rel:"records refund.recorded", conf:"0.91", w:91, file:"src/payments/LedgerService.ts", line:87, code:'await auditLog.record("refund.recorded", entry.id);', rule:"", down:""},
+  RefundsController:{title:"RefundsController is new", rel:"calls LedgerService.recordRefund", conf:"0.98", w:98, file:"src/payments/RefundsController.ts", line:17, code:"const refund = await ledger.recordRefund(req.body);", rule:"", down:""},
+  "refunds table":{title:"Migration 0042 adds the refunds table", rel:"stores idempotency keys", conf:"0.97", w:97, file:"db/migrations/0042_refunds.sql", line:3, code:"CREATE TABLE refunds (id uuid primary key, idempotency_key text unique, ...);", rule:"", down:""},
+  PaymentRepository:{title:"PaymentRepository is unchanged but connected", rel:"LedgerService writes entries through it", conf:"0.88, from the repo's import graph", w:88, file:"src/payments/PaymentRepository.ts", line:22, code:"async insertEntry(entry: LedgerEntry) { ... }", rule:"", down:""},
+  "Stripe client":{title:"Stripe client is not touched", rel:"no call in this PR", conf:"0.99", w:99, file:"src/payments/stripe.ts", line:1, code:"// no changes in this PR; settlement runs in the nightly job", rule:"", down:""},
+};
+
+// ---------- state ----------
+const KEY="dekko-proto-v1";
+let S = {prediction:"", picked:[], answers:{}, grades:{}, done:false};
+try{ const saved=JSON.parse(localStorage.getItem(KEY)||"null"); if(saved) S=Object.assign(S,saved); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+// ---------- helpers ----------
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const go=h=>{ location.hash=h; };
+function steps(i){ return `<span class="steps">${[0,1,2,3].map(k=>`<i class="${k<i?'done':k===i?'on':''}"></i>`).join("")}</span>`; }
+function briefTop(i,time){ return `<div class="brief-top"><span class="brand" style="padding:0">Dekko</span><span class="ctx">#412 Add refund flow</span>${steps(i)}<span class="time">${time}</span></div>`; }
+function scoreNow(){ const hit=S.picked.filter(c=>AFFECTED.has(c)); const miss=[...AFFECTED].filter(c=>!S.picked.includes(c)); const fa=S.picked.filter(c=>!AFFECTED.has(c)); return {hit,miss,fa}; }
+
+// ---------- views ----------
+const V = {};
+V.inbox = () => `
+<div class="page">
+  <h1>Pull requests waiting for you</h1>
+  <p class="sub">A brief takes about four minutes. Required ones block the merge.</p>
+  <div class="card"><ul class="prlist">${PRS.map(p=>`
+    <li>
+      <span class="title">#${p.n} ${esc(p.title)}</span>
+      <span class="meta">${p.by} · ${p.files} files · agent signals: ${esc(p.agent)}</span>
+      ${p.trivial?`<span class="pill done">No brief needed</span>`:(S.done&&p.n===412?`<span class="pill done">You passed</span>`:(p.required?`<span class="pill req">Brief required</span>`:`<span class="pill">Optional</span>`))}
+      ${p.n===412&&!S.done?`<a class="btn sm" href="#/brief/412/predict">Start the brief</a>`:(p.n===412?`<a class="btn sm ghost" href="#/brief/412/reveal">Open</a>`:`<span class="btn sm ghost" style="opacity:.5">Start the brief</span>`)}
+    </li>`).join("")}</ul></div>
+  <p class="small" style="margin-top:1rem">In this prototype only #412 is wired. The others show how the list reads.</p>
+</div>`;
+
+V.predict = () => `
+${briefTop(0,"about 4 min")}
+<div class="brief">
+  <p class="step">Before you read any code</p>
+  <p class="q">In one sentence, what does this change do?</p>
+  <textarea class="input" id="pred" rows="2" placeholder="Your guess, in your own words">${esc(S.prediction)}</textarea>
+  <p class="q">Which parts of the system does it touch?</p>
+  <p class="hint">Tap everything you expect. Some of these aren't touched.</p>
+  <div class="chips">${COMPONENTS.map(c=>`<button class="chip" data-chip="${esc(c)}" aria-pressed="${S.picked.includes(c)}">${esc(c)}</button>`).join("")}</div>
+  <p class="files">14 files changed · <button class="link" data-action="files">show the list</button></p>
+  <ul class="filelist" id="filelist">
+    <li><span class="a">+</span> src/payments/RefundsController.ts</li><li><span class="m">~</span> src/payments/LedgerService.ts</li><li><span class="a">+</span> src/payments/refund.types.ts</li><li><span class="m">~</span> src/notifications/queue.ts</li><li><span class="m">~</span> src/audit/AuditLog.ts</li><li><span class="a">+</span> db/migrations/0042_refunds.sql</li><li><span class="a">+</span> src/payments/__tests__/refunds.test.ts</li><li>… 7 more</li>
+  </ul>
+  <div class="row"><button class="btn" data-action="lock" id="lock" ${S.picked.length?"":"disabled"}>Lock my guess and read</button><span class="small">You can't change it after this</span></div>
+</div>`;
+
+V.read = (i) => { const h=HUNKS[i]; const last=i===HUNKS.length-1; return `
+${briefTop(1,`about ${3-Math.floor(i/2)} min left`)}
+<div class="brief">
+  <p class="step">Read ${i+1} of ${HUNKS.length} · ${h.code.length} lines</p>
+  <p class="lead">${esc(h.why)}</p>
+  <div class="code"><div class="file"><span>${esc(h.file)}</span><span>lines ${h.lines}</span></div>
+  <pre>${h.code.map(([n,t,c])=>`<span class="${c}"><span class="ln">${n}</span>${esc(t)}</span>`).join("\n")}</pre></div>
+  <div class="row"><a class="btn" href="${last?'#/brief/412/answer/0':'#/brief/412/read/'+(i+1)}">${last?"I've read these, ask me":"Next"}</a>${i>0?`<a class="link" href="#/brief/412/read/${i-1}">Back</a>`:""}<button class="link" data-action="wholediff">Show the whole diff</button></div>
+</div>`; };
+
+V.answer = (i) => { const q=QUESTIONS[i]; const g=S.grades[i]; const a=S.answers[i]||""; const last=i===QUESTIONS.length-1; return `
+${briefTop(2,`about ${2-Math.floor(i/2)} min left`)}
+<div class="brief">
+  <p class="step">Question ${i+1} of ${QUESTIONS.length}</p>
+  <p class="q">${esc(q.q)}</p>
+  <textarea class="input" id="ans" rows="3" placeholder="Answer without looking at the code" ${g?"readonly":""}>${esc(a)}</textarea>
+  ${g?`<div class="fb ${g.v==='right'?'ok':''}"><b>${g.v==='right'?'Correct.':'Partly right.'}</b> ${esc(g.text)} <button class="link" data-action="evidence" data-id="LedgerService">See ${esc(q.ref)}</button></div>`:""}
+  <div class="row">
+    ${g?`<a class="btn" href="${last?'#/brief/412/reveal':'#/brief/412/answer/'+(i+1)}">${last?"Show me the map":"Next question"}</a><button class="link" data-action="dispute" data-i="${i}">This grade is wrong</button>`:`<button class="btn" data-action="grade" data-i="${i}">Check my answer</button>`}
+  </div>
+</div>`; };
+
+V.reveal = () => { const {hit,miss,fa}=scoreNow(); const badge=c=>hit.includes(c)?"b-hit":miss.includes(c)?"b-miss":fa.includes(c)?"b-false":"b-hide"; const glyph=c=>hit.includes(c)?"✓":miss.includes(c)?"!":"?";
+ const node=(id,x,y,w,cls,label,sub)=>`<g class="n ${cls}" data-id="${esc(id)}" tabindex="0" role="button" aria-label="${esc(label)}"><rect x="${x}" y="${y}" width="${w}" height="52" rx="10"/><text x="${x+w/2}" y="${y+22}" class="nl">${esc(label)}</text><text x="${x+w/2}" y="${y+39}" class="ns">${sub}</text><circle cx="${x+w-4}" cy="${y+4}" r="8" class="${badge(id)}"/><text x="${x+w-4}" y="${y+7}" class="bt ${badge(id)==='b-hide'?'b-hide':''}">${glyph(id)}</text></g>`;
+ return `
+${briefTop(3,"last step")}
+<div class="brief">
+  <p class="result">You predicted ${hit.length} of ${AFFECTED.size} parts this change touches.</p>
+  <div class="mapbox"><svg viewBox="0 0 560 200" role="img" aria-label="Map of the change with your prediction marked">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--muted)" stroke-width="1.4"/></marker></defs>
+    <g stroke="var(--muted)" stroke-width="1.4" fill="none" marker-end="url(#ar)"><line x1="160" y1="40" x2="200" y2="40"/><line x1="280" y1="66" x2="280" y2="122"/><line x1="360" y1="40" x2="400" y2="40"/><path d="M360 56 C395 85 420 100 460 122"/></g>
+    <g fill="var(--muted)" font-size="10" font-family="var(--font)" text-anchor="middle"><text x="180" y="33">calls</text><text x="300" y="98" text-anchor="start">writes</text><text x="380" y="33">logs</text><text x="430" y="92">publishes</text></g>
+    ${node("RefundsController",20,14,140,"n-add","RefundsController","new")}
+    ${node("LedgerService",200,14,160,"n-mod","LedgerService","changed")}
+    ${node("AuditLog",400,14,140,"n-mod","AuditLog","changed")}
+    ${node("PaymentRepository",200,124,160,"n-ctx","PaymentRepository","unchanged")}
+    ${node("NotificationQueue",400,124,140,"n-mod","NotificationQueue","changed")}
+    ${node("Stripe client",20,124,140,"n-none","Stripe client","not touched")}
+  </svg></div>
+  <div class="legend"><span><i style="background:var(--ok)"></i>You got it</span><span><i style="background:var(--bad)"></i>You missed it</span><span><i style="background:var(--warn)"></i>You expected it, nothing changed there</span><span class="small">Tap a box for the lines behind it</span></div>
+  <ul class="list">
+    ${miss.map(c=>`<li data-id="${esc(c)}"><span class="ic miss">!</span><span class="t"><b>${esc(c)}</b><span>${esc(EVIDENCE[c]?EVIDENCE[c].rel:"")}. ${esc(EVIDENCE[c]?EVIDENCE[c].file.split('/').pop():"")} line ${EVIDENCE[c]?EVIDENCE[c].line:""}.</span></span><span class="chev">›</span></li>`).join("")}
+    ${fa.map(c=>`<li data-id="${esc(c)}"><span class="ic false">?</span><span class="t"><b>${esc(c)}</b><span>You expected this. ${esc(EVIDENCE[c]?EVIDENCE[c].rel:"The PR doesn't touch it.")}.</span></span><span class="chev">›</span></li>`).join("")}
+    ${hit.map(c=>`<li data-id="${esc(c)}"><span class="ic hit">✓</span><span class="t"><b>${esc(c)}</b><span>${esc(EVIDENCE[c]?EVIDENCE[c].rel:"")}.</span></span><span class="chev">›</span></li>`).join("")}
+  </ul>
+  <div class="row"><button class="btn" data-action="finish">Finish</button></div>
+</div>`; };
+
+V.done = () => { const right=Object.values(S.grades).filter(g=>g.v==='right').length; return `
+${briefTop(4,"3 min 40 s")}
+<div class="brief done">
+  <p class="big">${right>=2?"You understand this change.":"You're close. One more pass."}</p>
+  <p>${right} of ${QUESTIONS.length} questions right. One thing to fix before merge: the publish on line 88 has no retry.</p>
+  <p class="small">${right>=2?"Your check has passed. The PR still needs one reviewer's brief.":"Your check needs 2 of 3. Re-read lines 84 to 88 and try question 2 again."}</p>
+  <div class="row"><a class="btn" href="#/">Back to pull requests</a>${right<2?`<a class="link" href="#/brief/412/answer/1">Retry question 2</a>`:`<button class="link" data-action="comment">Add the fix as a PR comment</button>`}</div>
+</div>`; };
+
+V.team = () => `
+<div class="page">
+  <h1>Team</h1>
+  <p class="sub">finlabs / core · last 90 days</p>
+  <div class="kpi"><div><b>58%</b><span>prediction accuracy, up from 41%</span></div><div><b>23</b><span>briefs a week</span></div><div><b>3</b><span>areas need attention</span></div></div>
+  <div class="card">
+    <div class="area"><code>src/payments/ledger</code><span class="bar"><i style="width:88%;background:var(--bad)"></i></span><span class="txt">14 agent PRs, understood by 1 person (Maya), last brief 6 weeks ago</span><button class="link" data-action="toast" data-msg="Next ledger PR will be routed to someone other than Maya">Route the next PR to someone else</button></div>
+    <div class="area"><code>db/migrations</code><span class="bar"><i style="width:72%;background:var(--bad)"></i></span><span class="txt">8 agent PRs, understood by 1 person, no brief this month</span><a class="link" href="#/settings">Require a brief here</a></div>
+    <div class="area"><code>src/api</code><span class="bar"><i style="width:46%;background:var(--warn)"></i></span><span class="txt">21 agent PRs, understood by 3 people, trending better</span><button class="link" data-action="toast" data-msg="Watching src/api">Watch</button></div>
+  </div>
+  <p class="small" style="margin-top:1rem">Five other areas are fine. A summary goes to #engineering every Monday.</p>
+</div>`;
+
+V.settings = () => `
+<div class="page">
+  <h1>Settings</h1>
+  <p class="sub">finlabs / core</p>
+  <div class="card">
+    <div class="set"><b><button class="toggle" role="switch" aria-checked="true" data-action="toggle"></button>Require a brief before merging in these areas</b>
+      <p class="hint">Everywhere else, the brief is optional.</p>
+      <div class="chips" style="margin:0 0 .8rem"><button class="chip" aria-pressed="true">src/payments/**</button><button class="chip" aria-pressed="true">src/auth/**</button><button class="chip" aria-pressed="true">db/migrations/**</button><button class="chip" data-action="toast" data-msg="Path picker would open here">+ Add a path</button></div>
+      <p class="hint" style="margin:0 0 .3rem">Who has to pass</p>
+      <div class="radio"><button aria-pressed="false" data-radio>Author</button><button aria-pressed="true" data-radio>Author and one reviewer</button><button aria-pressed="false" data-radio>Everyone who approves</button></div>
+    </div>
+    <div class="set"><b><button class="toggle" role="switch" aria-checked="true" data-action="toggle"></button>Architecture rules</b>
+      <p class="hint">Checked on every PR. Warnings only, until you mark a rule as blocking.</p>
+      <div class="area"><code>payments-no-notifications</code><span class="txt">src/payments must not import src/notifications. Exact check.</span><button class="link" data-action="toast" data-msg="Rule editor would open here">Edit</button></div>
+      <div class="area"><code>ui-no-db</code><span class="txt">UI components must not import the database client. Exact check.</span><button class="link" data-action="toast" data-msg="Rule editor would open here">Edit</button></div>
+      <div class="area"><code>data-via-repositories</code><span class="txt">Services touch data only through repositories. Judged by Dekko, shown with confidence.</span><button class="link" data-action="toast" data-msg="Rule editor would open here">Edit</button></div>
+      <p class="small" style="margin:.8rem 0 0"><button class="link" data-action="toast" data-msg="Rule editor would open here">+ Add a rule</button> · <button class="link" data-action="toast" data-msg="Opens archsync.yml">Edit as YAML</button> · Already using dependency-cruiser or Nx? <button class="link" data-action="toast" data-msg="Import wizard would open here">Import their rules</button></p>
+    </div>
+  </div>
+</div>`;
+
+// ---------- router ----------
+function route(){
+  const h=location.hash.replace(/^#\/?/,"")||""; const p=h.split("/").filter(Boolean); let html, nav="inbox";
+  if(p[0]==="brief"){ nav=""; const step=p[2]||"predict"; const i=parseInt(p[3]||"0",10)||0;
+    if(step==="predict") html=V.predict();
+    else if(step==="read") html=V.read(Math.min(i,HUNKS.length-1));
+    else if(step==="answer") html=V.answer(Math.min(i,QUESTIONS.length-1));
+    else if(step==="reveal") html=V.reveal();
+    else if(step==="done") html=V.done();
+    else html=V.predict();
+  } else if(p[0]==="team"){ html=V.team(); nav="team"; }
+  else if(p[0]==="settings"){ html=V.settings(); nav="settings"; }
+  else { html=V.inbox(); nav="inbox"; }
+  document.getElementById("view").innerHTML=html;
+  const links=[["inbox","#/","Pull requests",S.done?"":"2"],["team","#/team","Team",""],["settings","#/settings","Settings",""]];
+  document.getElementById("nav").innerHTML=links.map(([k,href,label,b])=>`<a href="${href}" class="${nav===k?'cur':''}">${label}${b?`<span class="badge">${b}</span>`:""}</a>`).join("");
+  document.getElementById("mobilebar").innerHTML=`<span class="brand">Dekko</span>`+links.map(([k,href,label])=>`<a href="${href}" class="${nav===k?'cur':''}">${label}</a>`).join("");
+  document.getElementById("main").scrollTop=0; closeSheet();
+}
+window.addEventListener("hashchange",route);
+
+// ---------- interactions ----------
+document.getElementById("view").addEventListener("click",e=>{
+  const chip=e.target.closest("[data-chip]"); if(chip){ const c=chip.dataset.chip; S.picked=S.picked.includes(c)?S.picked.filter(x=>x!==c):[...S.picked,c]; chip.setAttribute("aria-pressed",String(S.picked.includes(c))); document.getElementById("lock").disabled=!S.picked.length; save(); return; }
+  const radio=e.target.closest("[data-radio]"); if(radio){ radio.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed","false")); radio.setAttribute("aria-pressed","true"); return; }
+  const node=e.target.closest(".n[data-id], .list li[data-id]"); if(node){ openSheet(node.dataset.id); return; }
+  const btn=e.target.closest("[data-action]"); if(!btn) return; const a=btn.dataset.action;
+  if(a==="files"){ document.getElementById("filelist").classList.toggle("open"); btn.textContent=document.getElementById("filelist").classList.contains("open")?"hide the list":"show the list"; }
+  if(a==="lock"){ S.prediction=document.getElementById("pred").value.trim(); if(!S.picked.length) return; save(); go("#/brief/412/read/0"); }
+  if(a==="wholediff"){ toast("The full 612-line diff would open here. Most reviewers won't need it."); }
+  if(a==="grade"){ const i=+btn.dataset.i; const text=document.getElementById("ans").value.trim(); if(!text){ toast("Write an answer first, even a short one."); return; } const q=QUESTIONS[i]; const t=text.toLowerCase(); const hits=q.keys.filter(k=>t.includes(k)).length; const v=hits>=2?"right":"partly"; S.answers[i]=text; S.grades[i]={v,text:v==="right"?q.right:q.partly}; save(); route(); }
+  if(a==="dispute"){ toast("Recorded: you disputed this grade. It goes to the corrections log with the PR."); }
+  if(a==="evidence"){ openSheet(btn.dataset.id); }
+  if(a==="finish"){ S.done=true; save(); go("#/brief/412/done"); }
+  if(a==="comment"){ toast("Posted to PR #412: 'The publish on line 88 has no retry; consider an outbox.'"); }
+  if(a==="toggle"){ btn.setAttribute("aria-checked", btn.getAttribute("aria-checked")==="true"?"false":"true"); }
+  if(a==="toast"){ toast(btn.dataset.msg); }
+});
+document.getElementById("view").addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("n")){ e.preventDefault(); openSheet(e.target.dataset.id); } });
+
+function openSheet(id){ const ev=EVIDENCE[id]; if(!ev) return; const sheet=document.getElementById("sheet");
+  sheet.innerHTML=`<div class="head"><b id="sheetTitle">${esc(ev.title)}</b><button class="link" data-close>Close</button></div>
+  <div class="in"><div class="conf">Confidence <i style="--w:${ev.w}%"></i> ${esc(ev.conf)}</div>
+  <div class="code"><div class="file"><span>${esc(ev.file)}</span><span>line ${ev.line}</span></div><pre><span class="add hl"><span class="ln">${ev.line}</span>${esc(ev.code)}</span></pre></div>
+  ${ev.rule?`<p style="margin:0 0 .5rem"><span class="tag warn">Rule warning</span> · ${esc(ev.rule)}</p>`:""}
+  ${ev.down?`<p style="margin:0 0 1rem"><span class="tag warn">Downstream</span> · ${esc(ev.down)}</p>`:""}
+  <div class="row"><button class="btn ghost sm" data-close>Open in the diff</button><button class="link" data-close data-dispute>This is wrong</button></div></div>`;
+  sheet.classList.add("open"); document.getElementById("scrim").classList.add("open"); sheet.querySelector("[data-close]").focus(); }
+function closeSheet(){ document.getElementById("sheet").classList.remove("open"); document.getElementById("scrim").classList.remove("open"); }
+document.getElementById("sheet").addEventListener("click",e=>{ if(e.target.closest("[data-dispute]")) toast("Recorded: you marked this as wrong."); if(e.target.closest("[data-close]")) closeSheet(); });
+document.getElementById("scrim").addEventListener("click",closeSheet);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+
+let toastT; function toast(msg){ let t=document.getElementById("toast"); if(!t){ t=document.createElement("div"); t.id="toast"; t.setAttribute("role","status"); t.style.cssText="position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:.6rem 1rem;border-radius:10px;font-size:.88rem;max-width:90vw;z-index:40"; document.body.appendChild(t);} t.textContent=msg; t.style.display="block"; clearTimeout(toastT); toastT=setTimeout(()=>t.style.display="none",2600); }
+
+// ---------- prototype controls ----------
+let look={dir:"A",mode:"light"};
+try{ const l=JSON.parse(localStorage.getItem("dekko-look")||"null"); if(l) look=l; }catch(e){}
+function applyLook(){ document.documentElement.dataset.dir=look.dir; document.documentElement.dataset.mode=look.mode;
+  document.querySelectorAll(".proto [data-dir]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.dir===look.dir)));
+  document.querySelectorAll(".proto [data-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===look.mode)));
+  try{ localStorage.setItem("dekko-look",JSON.stringify(look)); }catch(e){} }
+document.querySelector(".proto").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.dir){ look.dir=b.dataset.dir; applyLook(); }
+  if(b.dataset.mode){ look.mode=b.dataset.mode; applyLook(); }
+  if(b.id==="reset"){ S={prediction:"",picked:[],answers:{},grades:{},done:false}; save(); go("#/"); route(); toast("Prototype state cleared"); } });
+applyLook(); route();
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+---
+description: UI and UX rules for apps/web (Look A, one thing per screen)
+globs: apps/web/app/**,apps/web/components/**
+alwaysApply: false
+---
+Reference: docs/design/prototype.html is the approved prototype. Match it; do not redesign it.
+
+Tokens
+- Colors come only from the CSS variables in app/globals.css (or their Tailwind names: bg-surface, text-muted, border-line, bg-accent, bg-accent-soft, text-ok, bg-warn-soft, text-bad). Never write a hex value in a component.
+- Meaning colors are fixed: ok = right/added/passed, warn = partly/changed/warning, bad = missed/removed/violation. Never use them for decoration. The accent is for the primary action, selected state and progress only.
+- Fonts: font-display (Instrument Serif) only for the one question or headline on a screen, regular weight. font-sans (Instrument Sans) for everything else. font-mono (IBM Plex Mono) for file paths, line numbers and code.
+- Radii: rounded-md for panels, inputs and code blocks; rounded-chip for chips; rounded-btn for buttons. No shadows except the evidence sheet and toasts.
+
+Screens
+- One question or one piece of code per screen. One primary button per screen; it says what happens next ("Lock my guess and read", not "Submit").
+- Brief screens are a single centered column, max-width var(--measure), padding var(--pad-screen). No sidebars inside the brief.
+- Every brief screen shows the step bar and the time estimate in the top bar.
+- Details (evidence, confidence, rule warnings, downstream consumers) live in the bottom sheet, opened by tapping a node or a list row. Never inline them on the main view.
+- Lists do the teaching under the map: name, one line why, chevron. The map itself has no labels beyond one word per arrow.
+- Buttons are disabled until the screen's input is valid (e.g. no chips picked).
+
+Code
+- Server Components by default; "use client" only for state, events, or the SVG map.
+- Components take typed props from @dekko/core types; no data fetching inside presentational components.
+- Keyboard: every clickable thing is a button or link with a visible focus ring. Map nodes are focusable (tabindex, role="button").
+- Respect prefers-reduced-motion; the only motion is the bottom sheet sliding in.
+- Copy: sentence case, plain verbs, no exclamation marks, no emoji in the product UI.

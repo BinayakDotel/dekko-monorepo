@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Dekko design tokens: Look A ("Reading room").
+   Light by default, dark via the OS setting or data-theme="dark" on <html>.
+   Components use the variables; never hard-code colors in components. */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  /* surfaces and text */
+  --shell: #f0f2ef;      /* app background behind panels */
+  --surface: #ffffff;    /* cards, panels, sheets */
+  --field: #f3f4f1;      /* inputs, code headers, quiet fills */
+  --ink: #1b2430;        /* primary text */
+  --muted: #6b7480;      /* secondary text */
+  --line: #d9ded9;       /* borders */
+  --line-2: #eceFeb;     /* hairlines inside panels */
+
+  /* brand: one accent, used for the primary action, selection and progress only */
+  --accent: #1f4e9e;
+  --accent-ink: #ffffff;       /* text on accent */
+  --accent-soft: #e6edfb;      /* selected chips, current nav item */
+  --accent-on-soft: #1f4e9e;   /* text on accent-soft */
+
+  /* meaning colors: never reuse for decoration */
+  --ok: #1e7a4f;       --ok-soft: #e3f5ea;    /* right, added, passed */
+  --warn: #b45309;     --warn-soft: #fff3d9;  /* partly, changed, warning */
+  --bad: #b91c1c;      --bad-soft: #fde4e4;   /* missed, removed, violation */
+
+  --map-bg: #ffffff;
+  --overlay: rgba(20, 26, 34, 0.45);
+
+  /* shape and rhythm */
+  --radius: 10px;
+  --radius-chip: 999px;
+  --radius-btn: 9px;
+  --pad-screen: 2rem 1.5rem 2.6rem;
+  --measure: 640px;    /* max width of a brief screen */
+
+  /* type roles (families are set in layout.tsx via next/font) */
+  --text-base: 0.95rem;
+  --text-question: 1.3rem;   /* the one question on a screen, display face, regular weight */
+  --text-small: 0.84rem;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --shell: #111519; --surface: #181d22; --field: #20262c;
+    --ink: #e6eaee; --muted: #98a3ae; --line: #2c3339; --line-2: #242a30;
+    --accent: #8fb0ff; --accent-ink: #0e1626; --accent-soft: #1e2a45; --accent-on-soft: #b8cbff;
+    --ok: #5fd08f; --ok-soft: #16301f;
+    --warn: #f0b458; --warn-soft: #33270f;
+    --bad: #f38a8a; --bad-soft: #3a1a1a;
+    --map-bg: #121619; --overlay: rgba(0, 0, 0, 0.6);
   }
 }
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+:root[data-theme="dark"] {
+  --shell: #111519; --surface: #181d22; --field: #20262c;
+  --ink: #e6eaee; --muted: #98a3ae; --line: #2c3339; --line-2: #242a30;
+  --accent: #8fb0ff; --accent-ink: #0e1626; --accent-soft: #1e2a45; --accent-on-soft: #b8cbff;
+  --ok: #5fd08f; --ok-soft: #16301f;
+  --warn: #f0b458; --warn-soft: #33270f;
+  --bad: #f38a8a; --bad-soft: #3a1a1a;
+  --map-bg: #121619; --overlay: rgba(0, 0, 0, 0.6);
 }
+
+/* Expose tokens to Tailwind utilities: bg-surface, text-muted, border-line, bg-accent, etc. */
+@theme inline {
+  --color-shell: var(--shell);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-on-soft: var(--accent-on-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --radius-md: var(--radius);
+  --radius-chip: var(--radius-chip);
+  --radius-btn: var(--radius-btn);
+}
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--shell);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
