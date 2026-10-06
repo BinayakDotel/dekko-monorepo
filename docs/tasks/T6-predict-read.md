@@ -1,7 +1,7 @@
 ---
 id: T6
 title: Predict backend (decoys, scoring, sessions)
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/7"
 depends: [T5]
