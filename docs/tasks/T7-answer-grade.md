@@ -4,7 +4,7 @@ title: Answer screen + gradeAnswer
 status: todo
 base: main
 pr: ""
-depends: [T6]
+depends: [T6c]
 ---
 
 ## Goal
