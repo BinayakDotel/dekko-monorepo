@@ -14,6 +14,20 @@ export default defineSchema({
     repo: v.string(),
     prNumber: v.number(),
     headSha: v.string(),
+    title: v.optional(v.string()),
+    files: v.optional(
+      v.array(
+        v.object({
+          path: v.string(),
+          kind: v.union(
+            v.literal("added"),
+            v.literal("modified"),
+            v.literal("removed"),
+            v.literal("renamed"),
+          ),
+        }),
+      ),
+    ),
     model: v.any(),
     modelId: v.string(),
     usage: v.any(),
@@ -45,7 +59,11 @@ export default defineSchema({
     userId: v.string(),
     predictionText: v.string(),
     predictedComponents: v.array(v.string()),
-    predictionScore: v.any(),
+    predictionScore: v.object({
+      hits: v.array(v.string()),
+      missed: v.array(v.string()),
+      falseAlarms: v.array(v.string()),
+    }),
     answers: v.array(answer),
     score: v.optional(v.number()),
     startedAt: v.number(),
