@@ -38,6 +38,6 @@ just test-q
 - Layout: system prompt in `packages/core/src/prompts/analyze.ts`; logic + env adapter in `packages/core/src/ai/analyze.ts`; test beside it. Re-export `analyze` (+ result types) from `@dekko/core`.
 - Deps (why): add `ai`, `@ai-sdk/groq`, `@ai-sdk/anthropic` to `@dekko/core` — required to call the Vercel AI SDK with the two providers from this package.
 - Manual: `just analyze <path-to-diff>` is a documented one-liner (tsx/node against the library + env); not a polished script surface. Human runs it once on a fixture after `/build`.
-- System prompt: draft shown in `/take`; write the file only after human OK on `/build`.
+- System prompt: draft approved in `/take` (2026-10-06); `/build` writes `packages/core/src/prompts/analyze.ts` as shown.
 
 ## Outcome
