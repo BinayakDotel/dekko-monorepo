@@ -1,0 +1,180 @@
+diff --git a/.claude-plugin/marketplace.json b/.claude-plugin/marketplace.json
+index d76dd0c..2ffa5d7 100644
+--- a/.claude-plugin/marketplace.json
++++ b/.claude-plugin/marketplace.json
+@@ -19,6 +19,19 @@
+       "repository": "https://github.com/BinayakDotel/skills-marketplace",
+       "keywords": ["notes", "cheat-sheet", "revision", "sketchnote", "pdf", "study"],
+       "category": "productivity"
++    },
++    {
++      "name": "conventional-commits",
++      "displayName": "Conventional Commits",
++      "source": "./skills/conventional-commits",
++      "description": "Write clear Conventional Commits style commit messages (typed subject, body, breaking-change and issue footers) from a diff, staged changes or a short description of the work.",
++      "version": "1.0.0",
++      "author": { "name": "Binayak Dotel", "url": "https://github.com/BinayakDotel" },
++      "license": "MIT",
++      "homepage": "https://github.com/BinayakDotel/skills-marketplace/tree/main/skills/conventional-commits",
++      "repository": "https://github.com/BinayakDotel/skills-marketplace",
++      "keywords": ["git", "commit", "conventional-commits", "message", "developer-experience"],
++      "category": "productivity"
+     }
+   ]
+ }
+diff --git a/README.md b/README.md
+index a3c82fc..0e5891a 100644
+--- a/README.md
++++ b/README.md
+@@ -24,6 +24,7 @@ python3 skills/visual-notes/scripts/render_note.py \
+ | Skill | What it does | Version |
+ |---|---|---|
+ | [visual-notes](skills/visual-notes/) | Turns a topic, document or rough notes into a hand-drawn-style one-page study sheet (cheat sheet / revision notes) as a printable A4 PDF. | 1.0.2 |
++| [conventional-commits](skills/conventional-commits/) | Writes clear Conventional Commits messages (typed subject, body, breaking-change and issue footers) from a diff, staged changes or a short description of the work. | 1.0.0 |
+ 
+ ## Install
+ 
+diff --git a/skills/conventional-commits/CHANGELOG.md b/skills/conventional-commits/CHANGELOG.md
+new file mode 100644
+index 0000000..c31a1bf
+--- /dev/null
++++ b/skills/conventional-commits/CHANGELOG.md
+@@ -0,0 +1,10 @@
++# Changelog
++
++## 1.0.0 (2026-10-04)
++
++First release in this repo.
++
++- Writes Conventional Commits messages (typed subject, optional body, breaking-change and issue footers) from a diff, staged changes or a short description.
++- Type/scope table, subject and body rules, and worked good/bad examples.
++- Advises splitting a mixed change into several focused commits.
++- Pure instructions with no dependencies, so it runs in any agent that reads `SKILL.md`.
+diff --git a/skills/conventional-commits/SKILL.md b/skills/conventional-commits/SKILL.md
+new file mode 100644
+index 0000000..49bcb56
+--- /dev/null
++++ b/skills/conventional-commits/SKILL.md
+@@ -0,0 +1,122 @@
++---
++name: conventional-commits
++description: 'Write clear, Conventional Commits style commit messages from a diff, staged changes or a short description of the work. Produces a typed subject line, an optional body that explains what and why, and footers for breaking changes and issue references; it also splits a mixed change into several focused commits. Use whenever the user asks for a commit message, says "commit this", "write a commit", "make a commit", wants to reword or tidy an existing message, or asks how to divide work into commits.'
++license: MIT
++compatibility: No dependencies; pure instructions, so it runs in any agent that reads SKILL.md.
++---
++
++# Conventional commits
++
++A commit message is read twice: once now by a reviewer, once later by whoever runs `git blame`. Write a one-line header anyone can scan, and add a body only when it earns its place by explaining *why*.
++
++## Format
++
++```
++<type>(<scope>): <subject>
++
++<body>
++
++<footer(s)>
++```
++
++The subject is one line. Type and scope are optional in the spec but always worth choosing deliberately; a bare `update stuff` is not a message.
++
++## Workflow
++
++1. **Read the change.** Prefer the real diff: `git diff --staged` for staged work, otherwise `git diff`. If the user only describes the work in prose, use that and state what you assumed.
++2. **Choose the type** from the table below. Pick the *intent*, not the file touched: moving code is `refactor`; adding a capability is `feat`.
++3. **Write the subject:** `type(scope): summary` — imperative, lowercase, no period, ideally ≤ 50 characters (72 is the hard ceiling).
++4. **Add a body only if it carries something the subject cannot:** the reason, the trade-off, the thing a reader would otherwise have to ask. Wrap at 72; blank line after the subject.
++5. **Add footers** for breaking changes and issue links.
++6. **If the change is really several changes**, say so and propose one commit per change instead of piling everything into one message.
++
++## Choose the type
++
++| type | Use for |
++|---|---|
++| `feat` | a new capability the user can see |
++| `fix` | a bug fix |
++| `docs` | documentation only |
++| `refactor` | a behaviour-preserving code change |
++| `perf` | a change that improves speed or memory |
++| `test` | adding or correcting tests |
++| `style` | formatting only (whitespace, semicolons) |
++| `build` | build system or dependencies |
++| `ci` | CI configuration and scripts |
++| `chore` | housekeeping that touches neither `src` nor tests |
++| `revert` | undoing a previous commit |
++
++`feat` and `fix` are the two that map to releases; use them only when that is genuinely what changed.
++
++## The subject line
++
++- **Imperative, present tense:** `add retry`, never `added`, `adds` or `adding`. It should complete "This commit will …".
++- **Lowercase after the type**, no trailing period, no `Requested by` chatter.
++- **Name the behaviour, not the diff:** `fix(auth): reject expired tokens`, not `fix: change line 42`.
++- **Keep it scannable:** aim for ≤ 50 characters; 72 is where tools start to truncate.
++- **Scope** is a noun for the affected area, lowercase, in parentheses: `parser`, `api`, `deps`. It is a hint, not a requirement — omit it when the change is repo-wide.
++
++## The body and footers
++
++- The body explains **what** changed and **why**; the diff already shows *how*.
++- One blank line between subject and body; wrap at 72; use `-` bullets for independent points.
++- Record the reasoning that is not in the code: an issue, a constraint, a rejected alternative.
++- Footers go after a blank line:
++
++```
++BREAKING CHANGE: the `token` field is now required
++Closes: #128
++Refs: #131, #140
++```
++
++A `BREAKING CHANGE:` footer, or a `!` after the type/scope (`feat(api)!: drop v1`), marks an incompatible change.
++
++## Examples
++
++Good — a feature with context:
++
++```
++feat(auth): add magic-link sign-in
++
++Email a one-time link so users can sign in without a password.
++Existing session keys are unchanged, so this is additive.
++
++Closes: #204
++```
++
++Good — a fix that names the cause:
++
++```
++fix(pagination): stop dropping the last page
++
++The cursor was compared with `<` instead of `<=`, so the final
++partial page was never returned. Add a test for the odd-count case.
++```
++
++Good — one-liners:
++
++```
++docs(readme): document the skills install command
++refactor(parser): extract the token reader into its own module
++test(rate-limit): cover the burst boundary
++chore: bump pytest to 8.3
++```
++
++Avoid:
++
++```
++update stuff
++fixed bug
++WIP
++Added a new feature and also fixed the login and refactored css
++```
++
++The first three say nothing. The last hides three unrelated changes that belong in three commits.
++
++## Rules
++
++- One logical change per commit. If the subject needs "and", split it.
++- Do not invent a type or scope the project has not defined; if the repo already has its own convention, follow that instead and say so.
++- Describe the effect, not the file (`document the install command`, not `change SKILL.md`).
++- Match the language and wording style of the existing log.
++- Output the message ready to paste. Do not commit, push or reword history unless the user explicitly asks.

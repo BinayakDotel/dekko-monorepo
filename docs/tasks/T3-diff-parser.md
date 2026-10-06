@@ -20,10 +20,11 @@ Each Hunk also carries its text. `parseDiff` returns `{ hunks, skippedFiles }`.
 - packages/core/test/fixtures/ (3 real diffs: small, medium, one with a lockfile; create with `just fixture`)
 
 ## Done when
-`parseDiff(text)` returns `{ hunks, skippedFiles }` where each hunk is
-`{ id, file, startLine, endLine, kind, text }` with lockfiles and generated files listed in
-`skippedFiles`, and `validateAgainstDiff(model, hunks)` reports every unknown hunk id,
-both covered by fixture tests on 3 real diffs.
+`parseDiff(text)` returns `{ hunks, skippedFiles }`. Each Hunk has `id` (h1..hn in diff order), `file`,
+`oldStart`, `oldLines`, `newStart`, `newLines`, `kind` (added | modified | removed | renamed, from the
+file header), and `text` (the full hunk including its @@ line). Lockfiles, generated files and binaries
+are dropped and listed in `skippedFiles`. `validateAgainstDiff(model, hunks)` returns
+`{ ok: true } | { ok: false; unknownHunkIds }`. All of it covered by fixture tests on 3 real diffs.
 
 ## Verify
 just test-q && just typecheck

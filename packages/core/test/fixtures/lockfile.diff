@@ -1,0 +1,296 @@
+diff --git a/.pnpm-store/v11/index.db b/.pnpm-store/v11/index.db
+new file mode 100644
+index 0000000..341d902
+Binary files /dev/null and b/.pnpm-store/v11/index.db differ
+diff --git a/packages/core/package.json b/packages/core/package.json
+index 10e701f..81f16fa 100644
+--- a/packages/core/package.json
++++ b/packages/core/package.json
+@@ -15,5 +15,8 @@
+   "devDependencies": {
+     "typescript": "5.9.3",
+     "vitest": "5.0.3"
++  },
++  "dependencies": {
++    "zod": "4.6.5"
+   }
+ }
+diff --git a/packages/core/src/index.ts b/packages/core/src/index.ts
+index acead07..56d3773 100644
+--- a/packages/core/src/index.ts
++++ b/packages/core/src/index.ts
+@@ -1 +1,2 @@
+ export const PACKAGE_NAME = "@dekko/core";
++export * from "./schema";
+diff --git a/packages/core/src/schema.test.ts b/packages/core/src/schema.test.ts
+new file mode 100644
+index 0000000..1b9540f
+--- /dev/null
++++ b/packages/core/src/schema.test.ts
+@@ -0,0 +1,77 @@
++import { describe, expect, test } from "vitest";
++import { ChangeModelSchema, type ChangeModel } from "./schema";
++
++function validModel(): ChangeModel {
++  return {
++    schemaVersion: 1,
++    components: [
++      {
++        id: "auth-service",
++        label: "Auth service",
++        kind: "service",
++        status: "modified",
++        hunks: ["h1"],
++        confidence: 0.9,
++      },
++      {
++        id: "users-table",
++        label: "Users table",
++        kind: "model",
++        status: "context",
++        hunks: [],
++        confidence: 0.7,
++      },
++    ],
++    edges: [
++      {
++        from: "auth-service",
++        to: "users-table",
++        relation: "reads",
++        hunks: ["h1"],
++        confidence: 0.8,
++      },
++    ],
++    keyHunks: [{ hunkId: "h1", why: "Changes token validation.", rank: 1 }],
++    questions: [
++      { id: "q1", kind: "data-flow", text: "Where does the token go?", expectedAnswer: "To the DB.", hunks: ["h1"] },
++      { id: "q2", kind: "failure", text: "What if the DB is down?", expectedAnswer: "401.", hunks: ["h1"] },
++      { id: "q3", kind: "debugging", text: "Where would you look?", expectedAnswer: "Auth logs.", hunks: ["h1"] },
++    ],
++    summary: ["One.", "Two.", "Three."],
++    edgeCase: "Expired tokens are not rejected.",
++  };
++}
++
++function expectIssueAt(
++  result: ReturnType<typeof ChangeModelSchema.safeParse>,
++  path: Array<string | number>,
++): void {
++  expect(result.success).toBe(false);
++  if (result.success) return;
++  expect(result.error.issues.map((i) => i.path)).toContainEqual(path);
++}
++
++describe("ChangeModelSchema", () => {
++  test("parses a minimal valid model", () => {
++    expect(ChangeModelSchema.safeParse(validModel()).success).toBe(true);
++  });
++
++  test("rejects a modified component with no hunks", () => {
++    const model = validModel();
++    model.components[0]!.hunks = [];
++    expectIssueAt(ChangeModelSchema.safeParse(model), ["components", 0, "hunks"]);
++  });
++
++  test("rejects an edge pointing at an unknown component", () => {
++    const model = validModel();
++    model.edges[0]!.to = "ghost";
++    expectIssueAt(ChangeModelSchema.safeParse(model), ["edges", 0, "to"]);
++  });
++
++  test("rejects duplicate component ids", () => {
++    const model = validModel();
++    model.components[1]!.id = "auth-service";
++    model.edges[0]!.to = "auth-service";
++    expectIssueAt(ChangeModelSchema.safeParse(model), ["components", 1, "id"]);
++  });
++});
+diff --git a/packages/core/src/schema.ts b/packages/core/src/schema.ts
+new file mode 100644
+index 0000000..85ef2e0
+--- /dev/null
++++ b/packages/core/src/schema.ts
+@@ -0,0 +1,112 @@
++import { z } from "zod";
++
++export const HunkIdSchema = z.string().regex(/^h[1-9]\d*$/, "hunk id must look like h1, h2, ...");
++export const ComponentIdSchema = z
++  .string()
++  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "component id must be a kebab-case slug");
++const ConfidenceSchema = z.number().min(0).max(1);
++const HunkIdsSchema = z.array(HunkIdSchema);
++
++export const ComponentKindSchema = z.enum(["route", "service", "model", "queue", "ui", "other"]);
++export const ComponentStatusSchema = z.enum(["added", "modified", "removed", "context"]);
++export const EdgeRelationSchema = z.enum(["calls", "reads", "writes", "publishes", "imports", "other"]);
++export const QuestionKindSchema = z.enum(["data-flow", "failure", "debugging"]);
++
++export const ComponentSchema = z.object({
++  id: ComponentIdSchema,
++  label: z.string().min(1),
++  kind: ComponentKindSchema,
++  status: ComponentStatusSchema,
++  hunks: HunkIdsSchema,
++  confidence: ConfidenceSchema,
++});
++
++export const EdgeSchema = z.object({
++  from: ComponentIdSchema,
++  to: ComponentIdSchema,
++  relation: EdgeRelationSchema,
++  hunks: HunkIdsSchema.min(1),
++  confidence: ConfidenceSchema,
++});
++
++export const KeyHunkSchema = z.object({
++  hunkId: HunkIdSchema,
++  why: z.string().min(1),
++  rank: z.number().int().min(1),
++});
++
++export const QuestionSchema = z.object({
++  id: z.string().min(1),
++  kind: QuestionKindSchema,
++  text: z.string().min(1),
++  expectedAnswer: z.string().min(1),
++  hunks: HunkIdsSchema.min(1),
++});
++
++const ChangeModelShape = z.object({
++  schemaVersion: z.literal(1),
++  components: z.array(ComponentSchema).min(1),
++  edges: z.array(EdgeSchema),
++  keyHunks: z.array(KeyHunkSchema).min(1).max(3),
++  questions: z.array(QuestionSchema).length(3),
++  summary: z.array(z.string().min(1)).length(3),
++  edgeCase: z.string().min(1),
++});
++
++type Shape = z.infer<typeof ChangeModelShape>;
++type Ctx = z.RefinementCtx;
++
++function checkComponents({ components }: Shape, ctx: Ctx): void {
++  const seen = new Set<string>();
++  components.forEach((c, i) => {
++    if (seen.has(c.id)) {
++      ctx.addIssue({ code: "custom", path: ["components", i, "id"], message: `duplicate component id "${c.id}"` });
++    }
++    seen.add(c.id);
++    if (c.status !== "context" && c.hunks.length === 0) {
++      ctx.addIssue({ code: "custom", path: ["components", i, "hunks"], message: `${c.status} component needs at least one hunk` });
++    }
++  });
++}
++
++function checkEdges({ components, edges }: Shape, ctx: Ctx): void {
++  const ids = new Set(components.map((c) => c.id));
++  edges.forEach((e, i) => {
++    for (const end of ["from", "to"] as const) {
++      if (!ids.has(e[end])) {
++        ctx.addIssue({ code: "custom", path: ["edges", i, end], message: `unknown component "${e[end]}"` });
++      }
++    }
++  });
++}
++
++function checkKeyHunks({ keyHunks }: Shape, ctx: Ctx): void {
++  const ranks = keyHunks.map((k) => k.rank).sort((a, b) => a - b);
++  if (!ranks.every((rank, i) => rank === i + 1)) {
++    ctx.addIssue({ code: "custom", path: ["keyHunks"], message: "ranks must be unique and run 1..n" });
++  }
++}
++
++function checkQuestions({ questions }: Shape, ctx: Ctx): void {
++  const kinds = new Set(questions.map((q) => q.kind));
++  const ids = new Set(questions.map((q) => q.id));
++  if (kinds.size !== questions.length) {
++    ctx.addIssue({ code: "custom", path: ["questions"], message: "need exactly one question per kind" });
++  }
++  if (ids.size !== questions.length) {
++    ctx.addIssue({ code: "custom", path: ["questions"], message: "question ids must be unique" });
++  }
++}
++
++export const ChangeModelSchema = ChangeModelShape.superRefine((model, ctx) => {
++  checkComponents(model, ctx);
++  checkEdges(model, ctx);
++  checkKeyHunks(model, ctx);
++  checkQuestions(model, ctx);
++});
++
++export type ChangeModel = z.infer<typeof ChangeModelSchema>;
++export type Component = z.infer<typeof ComponentSchema>;
++export type Edge = z.infer<typeof EdgeSchema>;
++export type KeyHunk = z.infer<typeof KeyHunkSchema>;
++export type Question = z.infer<typeof QuestionSchema>;
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 1c8fef1..68a5157 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -59,6 +59,10 @@ importers:
+         version: 5.9.3
+ 
+   packages/core:
++    dependencies:
++      zod:
++        specifier: 4.6.5
++        version: 4.6.5
+     devDependencies:
+       typescript:
+         specifier: 5.9.3
+@@ -3480,8 +3484,8 @@ snapshots:
+       '@next/eslint-plugin-next': 16.3.8(eslint@9.39.5(jiti@2.7.0))
+       eslint: 9.39.5(jiti@2.7.0)
+       eslint-import-resolver-node: 0.3.10
+-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0))
+-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
++      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
++      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
+       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.5(jiti@2.7.0))
+       eslint-plugin-react: 7.37.5(eslint@9.39.5(jiti@2.7.0))
+       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.5(jiti@2.7.0))
+@@ -3503,7 +3507,7 @@ snapshots:
+     transitivePeerDependencies:
+       - supports-color
+ 
+-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0)):
++  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)):
+     dependencies:
+       '@nolyfill/is-core-module': 1.0.39
+       debug: 4.4.3
+@@ -3514,22 +3518,22 @@ snapshots:
+       tinyglobby: 0.2.17
+       unrs-resolver: 1.12.2
+     optionalDependencies:
+-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
++      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
+     transitivePeerDependencies:
+       - supports-color
+ 
+-  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0)):
++  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)):
+     dependencies:
+       debug: 3.2.7
+     optionalDependencies:
+       '@typescript-eslint/parser': 8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+       eslint: 9.39.5(jiti@2.7.0)
+       eslint-import-resolver-node: 0.3.10
+-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0))
++      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
+     transitivePeerDependencies:
+       - supports-color
+ 
+-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0)):
++  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)):
+     dependencies:
+       '@rtsao/scc': 1.1.0
+       array-includes: 3.2.0
+@@ -3540,7 +3544,7 @@ snapshots:
+       doctrine: 2.1.0
+       eslint: 9.39.5(jiti@2.7.0)
+       eslint-import-resolver-node: 0.3.10
+-      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
++      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
+       hasown: 2.0.4
+       is-core-module: 2.17.0
+       is-glob: 4.0.3

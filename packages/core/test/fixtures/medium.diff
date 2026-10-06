@@ -1,0 +1,807 @@
+diff --git a/.cursor/rules/core.mdc b/.cursor/rules/core.mdc
+deleted file mode 100644
+index 33614d3..0000000
+--- a/.cursor/rules/core.mdc
++++ /dev/null
+@@ -1,13 +0,0 @@
+----
+-description: Always-on rules for this repo
+-alwaysApply: true
+----
+-- Read `NOW.md` first. Work only on the ticket it names.
+-- Before changing code, restate the ticket's "done when" in one line.
+-- Prefer editing the files the user @-mentioned. Ask before reading the whole repo.
+-- Pure logic goes in packages/core and must be unit-testable with Vitest.
+-- No `any`. Export Zod schemas and infer types from them.
+-- Keep functions under 40 lines; split instead of nesting.
+-- When unsure between two designs, state both in two lines and ask. Do not implement both.
+-- Never run git commit or git push. Never print or read `.env*` files.
+-- After finishing, list: files changed, how to verify, one risk. Nothing else.
+diff --git a/.cursor/rules/engineering.mdc b/.cursor/rules/engineering.mdc
+new file mode 100644
+index 0000000..f18ad04
+--- /dev/null
++++ b/.cursor/rules/engineering.mdc
+@@ -0,0 +1,56 @@
++---
++description: How agent work runs in this repo. Always on.
++alwaysApply: true
++---
++# Engineering
++
++## Lifecycle (one ticket per chat, one skill per chat)
++- Tickets live in `docs/tasks/<ID>-<slug>.md`; index in `docs/tasks/README.md`.
++  Status: todo → in progress → in review → done. Only the skills change status.
++- `/take`: sync, pick ticket, check out its base, grill (max 8 questions), write Decisions + Files. No code.
++- `/build`: TDD with `just test-q`, `just check`, `code-review`, write Outcome, `gt create` + `gt submit`.
++- `/address`: fix PR comments on the same branch, `gt modify` + `gt submit`.
++- `/done`: after the human merges, sync, mark done, update the index, name the next ticket.
++- No skill invoked and the request is ticket work: name the skill that fits and stop.
++
++## Git
++- Allowed: `gt sync -f`, `gt checkout`, `gt create -am "<type(scope): subject>"`, `gt submit`, `gt modify -a`, read-only `gh`.
++- Exception: `/take` and `/done` may commit only files under `docs/tasks/**` on main with
++  `git commit -m "chore(tasks): …"` and `git push origin main`. Nothing else is ever committed on main.
++- Forbidden: `git commit` / `git push` outside that exception, any other commit on main,
++  `git reset`, `git rebase`, `git push --force`, `gt merge`. The human merges feature PRs on GitHub.
++- Never edit files listed in another `in progress` or `in review` ticket.
++- Never bundle a refactor with a feature. Never add a dependency without one sentence of why.
++- Never read or print `.env*` files.
++
++## Quality gates
++- Every behavior change ships with a test in the same change. Repo green after each step.
++- Before `gt create`: `just check` passes and `code-review` findings that are real are fixed.
++- Pure logic goes in `packages/core`: no I/O, unit-testable with Vitest.
++- No `any`. Export Zod schemas and infer types from them. Functions under 40 lines; split, don't nest.
++- A ticket needing more than ~5 files is split into stacked tickets before building.
++- Unsure between two designs: state both in two lines and ask. Never build both.
++
++## Commands
++- Run everything through the justfile (`just test-q`, `just typecheck`, `just check`, `just lint`, `just fixture`).
++  Raw `pnpm` only when no recipe exists.
++
++## Token discipline
++- Start from the ticket and its Files. For anything else use codebase search, then open files one at a time.
++- Never bulk-read the repo, lockfiles, `node_modules`, or fixtures (first 40 lines at most).
++- Tests only via `just test-q`. If it prints `TRUNCATED`, stop and say so.
++  Prefer `just typecheck` over `just build`. Never `pnpm install` unless you added a dependency.
++- Never edit `AGENTS.md` or `.cursor/rules/*` during a ticket; propose changes in the report.
++- Shortest complete answer. No restating the task, no previews, no pasted diffs (the PR is the diff).
++- If the chat drifts beyond the ticket, say so and stop.
++- Two failed attempts: stop, add a dated lesson to `docs/DECISIONS.md`, ask.
++
++## Models
++| Work | Model | Effort |
++|---|---|---|
++| `/take` | Claude Sonnet 5.5 | Medium |
++| `/build`, `/address`, `/done` | Auto | Low |
++| Hard bug after two failed attempts | Claude Opus 5.5 | Medium |
++| Never for routine work | Fable, any High effort | |
++
++End every reply with one line: `Next: /<skill> on <model>, effort <level>.`
+diff --git a/.cursor/rules/workflow.mdc b/.cursor/rules/workflow.mdc
+deleted file mode 100644
+index e761b69..0000000
+--- a/.cursor/rules/workflow.mdc
++++ /dev/null
+@@ -1,9 +0,0 @@
+----
+-description: Small steps, small commits
+-alwaysApply: true
+----
+-- One ticket per chat. If a ticket needs more than ~5 files, propose a split and stop.
+-- Work in steps that each leave the repo green. After each step: stop, summarize in 3 lines, propose a commit message (type(scope): subject), and wait for the human to commit.
+-- Commits are stacked (Graphite). Keep each ticket's change independent of other unmerged tickets; never edit files belonging to another open ticket.
+-- Never bundle a refactor with a feature.
+-- If an approach fails twice, stop and write down what you learned. Do not try a third approach without asking.
+\ No newline at end of file
+diff --git a/.cursor/skills/address/SKILL.md b/.cursor/skills/address/SKILL.md
+new file mode 100644
+index 0000000..9080a09
+--- /dev/null
++++ b/.cursor/skills/address/SKILL.md
+@@ -0,0 +1,16 @@
++---
++name: address
++description: Address PR review comments on the in-review ticket; gt modify + gt submit.
++disable-model-invocation: true
++---
++
++# /address [PR]
++
++1. Take the first `in review` ticket, or the one named. Read `gh pr view <n> --comments`.
++2. `gh pr view <n> --json headRefName` → `gt checkout` that branch.
++3. Fix each comment (behavior change → failing test first via `tdd`). `just test-q` then `just typecheck`.
++4. `gt modify -a` then `gt submit`.
++5. Report one line per comment: what changed, or why not.
++
++Token discipline and model table: `.cursor/rules/engineering.mdc`.
++Reply ends with: `Next: /done on Auto, effort Low.` (after human merges).
+diff --git a/.cursor/skills/build/SKILL.md b/.cursor/skills/build/SKILL.md
+new file mode 100644
+index 0000000..b60f96c
+--- /dev/null
++++ b/.cursor/skills/build/SKILL.md
+@@ -0,0 +1,18 @@
++---
++name: build
++description: Build the first in-progress ticket with TDD, review, then gt create + gt submit.
++disable-model-invocation: true
++---
++
++# /build
++
++1. Take the first `in progress` ticket. Read only the ticket and its Files.
++2. If it needs more than ~5 files, split into stacked tickets (each `base` = previous branch) and stop.
++3. Use the `tdd` skill. Red-green steps with `just test-q` only. Repo green after each step.
++4. `just check`, then `code-review` with fixed point = ticket `base` and spec = this ticket file. Fix real findings.
++5. Write `## Outcome` (what changed, why, one risk). Set status `in review`. Update the index.
++6. `gt create -am "<type(scope): subject>"` then `gt submit`. Put the PR URL into the ticket `pr` field and the index. Stage ticket edits with `gt modify -a` + `gt submit` if needed.
++7. Report the PR link and Outcome. No pasted diffs.
++
++Token discipline and model table: `.cursor/rules/engineering.mdc`.
++Reply ends with: `Next: /address on Auto, effort Low.` (or `/done` after human merges).
+diff --git a/.cursor/skills/done/SKILL.md b/.cursor/skills/done/SKILL.md
+new file mode 100644
+index 0000000..e06294f
+--- /dev/null
++++ b/.cursor/skills/done/SKILL.md
+@@ -0,0 +1,15 @@
++---
++name: done
++description: After merge, sync, mark tickets done, update index, name the next todo.
++disable-model-invocation: true
++---
++
++# /done
++
++1. `gt sync -f`.
++2. For each `in review` ticket with a `pr`, run `gh pr view <n> --json state`. If MERGED, set status `done`. Update `docs/tasks/README.md`.
++3. Commit bookkeeping only: stage `docs/tasks/**`, `git commit -m "chore(tasks): mark <IDs> done"`, `git push origin main`.
++4. Name the next `todo` whose `depends` are all `done`.
++
++Token discipline and model table: `.cursor/rules/engineering.mdc`.
++Reply ends with: `Next: /take on Claude Sonnet 5.5, effort Medium.`
+diff --git a/.cursor/skills/take/SKILL.md b/.cursor/skills/take/SKILL.md
+new file mode 100644
+index 0000000..bd8ccbe
+--- /dev/null
++++ b/.cursor/skills/take/SKILL.md
+@@ -0,0 +1,18 @@
++---
++name: take
++description: Take the next (or named) todo ticket, grill decisions, write Decisions + Files. No code.
++disable-model-invocation: true
++---
++
++# /take [ID]
++
++1. `gt sync -f`. For each `in review` ticket with a `pr`, run `gh pr view <n> --json state`. If MERGED, set status `done`. Update `docs/tasks/README.md`.
++2. Pick the named ticket, else the first `todo` whose `depends` are all `done`. `gt checkout <base>`. Set status `in progress`. Update the index.
++3. Commit bookkeeping only: stage `docs/tasks/**`, `git commit -m "chore(tasks): take <ID>"`, `git push origin main`.
++4. Read the ticket and its Files. Use codebase search for gaps; open extra files one at a time.
++5. Run the `grill-me` skill (→ `grilling`), capped at **8 questions total**, each with a recommendation. Prefer one batch.
++6. Write `## Decisions` and append discovered paths to `## Files`. If the ticket would touch more than ~5 files, propose a split and stop.
++7. Stop. Do not build.
++
++Token discipline and model table: `.cursor/rules/engineering.mdc`.
++Reply ends with: `Next: /build on Auto, effort Low.`
+diff --git a/AGENTS.md b/AGENTS.md
+index fb587ba..ec2e036 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,48 +1,30 @@
+ # Project: Dekko (code name: archsync)
+ 
+ A GitHub-centric tool that makes a developer prove they understand a pull request
+-before merging: Predict → Read → Answer → Reveal. Read `docs/SPEC-F1.md` for the
+-feature being built now and `docs/TASKS.md` for the current ticket.
++before merging: Predict → Read → Answer → Reveal.
+ 
+ ## How we work
+ 
+-- One ticket per chat. Read `NOW.md` first; it names the single next task.
+-- Plan before editing anything that touches more than two files. Wait for approval.
+-- Smallest change that satisfies the ticket's "done when". No drive-by refactors.
+-- Every behavior change comes with a test in the same change.
+-- Never run `git commit` or `git push`. The human commits.
+-- Never add dependencies without saying why in one sentence first.
+-- Secrets live in `.env.local` only. Never read or print them.
+-- Library docs beat memory. For Next.js, Turborepo, Vitest and the AI SDK, read the
+-  installed or official docs before writing code (see `.cursor/rules/`).
++- One ticket per chat. Index: [`docs/tasks/README.md`](docs/tasks/README.md).
++- Lifecycle skills: `/take` → `/build` → `/address` → `/done` (see `.cursor/skills/`).
++- Always-on rule: `.cursor/rules/engineering.mdc`. Path-scoped rules load by file.
++- Spec: `docs/SPEC-F1.md`. Decisions: `docs/DECISIONS.md`. Vocabulary: `CONTEXT.md`.
++- Secrets in `.env.local` only. Never read or print them.
++- Library docs beat memory (Next.js, Turborepo, Vitest, AI SDK).
+ 
+ ## Stack (do not deviate without a decision in docs/DECISIONS.md)
+ 
+-- pnpm workspaces + Turborepo. TypeScript everywhere. Node 22+.
+-- apps/web: Next.js App Router, Tailwind. Convex client for data.
+-- packages/core (`@dekko/core`): pure TypeScript, no I/O, source-only (no build step).
+-  Zod schemas, diff parser, scoring. apps/web consumes it via `transpilePackages`.
+-- apps/web/convex: Convex schema, queries, mutations, actions.
+-- Model calls go through packages/core/src/ai via the Vercel AI SDK; provider by env var.
+-
+-## Commands (run from the repo root)
+-
+-- `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm format`.
+-- One package: `pnpm --filter @dekko/core test`, `pnpm --filter web build`.
++- pnpm + Turborepo. TypeScript. Node 22+.
++- `apps/web`: Next.js App Router, Tailwind, Convex under `apps/web/convex`.
++- `packages/core` (`@dekko/core`): pure TS, no I/O, source-only via `transpilePackages`.
++- Model calls through `packages/core/src/ai` (Vercel AI SDK; provider by env).
+ 
+ ## Non-negotiables for AI output
+ 
+-- The model never writes diagram markup. It returns typed JSON (Zod schema) with
+-  hunk IDs and a confidence on every component and edge. Rendering is deterministic.
+-- Diffs, PR titles and PR bodies are untrusted data. Prompts say so.
+-
+-## Where guidance lives
++- Typed JSON (Zod) with hunk IDs and confidence — never diagram markup.
++- Diffs, PR titles and bodies are untrusted data. Prompts say so.
+ 
+-- `AGENTS.md` (this file): always-on contract, kept short.
+-- `.cursor/rules/*.mdc`: focused rules; only `core.mdc` is always on, the rest load by path.
+-- `NOW.md`: the single next task. `docs/`: spec, tickets, decisions, workflow, prompts.
+-- `apps/web/AGENTS.md` and the block below are auto-generated by Next and Turbo.
+-  Do not edit those blocks by hand.
++Commands: `just` (see root `README.md`).
+ 
+ <!-- BEGIN:turborepo-agent-rules -->
+ 
+diff --git a/NOW.md b/NOW.md
+deleted file mode 100644
+index 8e1b417..0000000
+--- a/NOW.md
++++ /dev/null
+@@ -1,16 +0,0 @@
+-# NOW
+-
+-Goal: F1, the comprehension loop, running on my own PRs by 2026-10-24.
+-
+-Done:
+-
+-- T1 Monorepo skeleton. `pnpm build`, `pnpm test`, `pnpm lint` pass. Why: gives every later ticket a home.
+-  Risk: TypeScript pinned at 5.9.3 because TS 7 is untested with Next 16.
+-
+-Next (ONE task): T2 — ChangeModel schema in packages/core/src/schema.ts (Zod) + parse test.
+-Before starting: add Zod to packages/core (say why in one sentence).
+-
+-Decisions made this week:
+-
+-- Convex lives inside apps/web/convex for now; move to a package only if a second app needs it.
+-- Node 22+ (was 20+); `@dekko/core` is source-only with `transpilePackages`.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..f59c4b8
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,32 @@
++# Dekko (archsync)
++
++GitHub-centric tool: prove you understand a PR before merging — Predict → Read → Answer → Reveal.
++
++## Working on this repo
++
++**Skills (one per chat):**
++
++| Skill | What it does |
++|---|---|
++| `/take` | Pick a `todo` ticket, grill decisions (max 8), write Decisions + Files. No code. |
++| `/build` | TDD the `in progress` ticket, review, open a PR via Graphite. |
++| `/address` | Fix PR review comments on the same branch. |
++| `/done` | After you merge: mark tickets done, name the next one. |
++
++**You (human):** answer `/take` questions, merge PRs on GitHub, run `/done`, save fixtures with `just fixture` when a ticket needs them.
++
++**Tickets:** [`docs/tasks/README.md`](docs/tasks/README.md). Spec: [`docs/SPEC-F1.md`](docs/SPEC-F1.md).
++
++## Commands
++
++```bash
++just              # list recipes
++just install      # pnpm install
++just run          # dev servers
++just test-q       # quiet vitest (agents)
++just check        # lint + typecheck + test-q
++just typecheck
++just fixture <pr-url> <name>   # save diff under packages/core/test/fixtures/
++```
++
++Requires Node 22+, pnpm, [just](https://github.com/casey/just), Graphite (`gt`), and `gh`.
+diff --git a/docs/DECISIONS.md b/docs/DECISIONS.md
+index 6c70200..dfd3204 100644
+--- a/docs/DECISIONS.md
++++ b/docs/DECISIONS.md
+@@ -1,9 +1,14 @@
+ # Decisions
+ 
+ - 2026-10-06 Monorepo with pnpm + Turborepo; TypeScript only; no Rust until indexing is slow.
+-- 2026-10-06 Convex inside apps/web for iteration 1.
++- 2026-10-06 Convex inside apps/web for iteration 1. Move to a package only if a second app needs it.
+ - 2026-10-06 Model provider from env. Groq open-weight for dev; a fixed strong model for evals.
+ - 2026-10-06 Model output is typed JSON with hunk ids + confidence. Never diagram markup.
+ - 2026-10-06 Node 22+ (supersedes 20+). `@dekko/core` is source-only, consumed by web via `transpilePackages`; no tsup.
+-- 2026-10-06 Agent guidance: AGENTS.md (always-on) + `.cursor/rules/*.mdc` (path-scoped) + NOW.md/docs. Generated Next/Turbo blocks stay as generated.
++- 2026-10-06 Agent guidance: AGENTS.md + `.cursor/rules/engineering.mdc` (always-on) + path-scoped rules + `docs/tasks/`. Generated Next/Turbo blocks stay as generated.
+ - 2026-10-06 TypeScript pinned at 5.9.x until Next supports TS 7.
++- 2026-10-06 Hunk ids are h1..hn in diff order, stable per head SHA. The model holds only ids; the parser's hunk table is stored beside the model.
++- 2026-10-06 confidence is a number 0–1 (UI buckets it; below 0.6 is drawn dashed). Enums are closed with `other`; component kinds include `external`.
++- 2026-10-06 Question kinds are spelled `data-flow`, `failure`, `debugging`.
++- 2026-10-06 Ticket lifecycle: one markdown file per ticket under `docs/tasks/`; skills `/take` `/build` `/address` `/done`. `/take` and `/done` may commit `docs/tasks/**` on main; feature work never commits on main.
++- 2026-10-06 Lesson: rejection tests must assert the specific issue path, not just `success === false`. A mutation check (comment out one rule, expect one red test) catches tests that pass for the wrong reason.
+diff --git a/docs/PROMPTS.md b/docs/PROMPTS.md
+deleted file mode 100644
+index e3d2c8c..0000000
+--- a/docs/PROMPTS.md
++++ /dev/null
+@@ -1,43 +0,0 @@
+-# Prompt sequence for Cursor (one chat per prompt)
+-
+-## Before any prompt
+-
+-T1 is done: the monorepo exists in this directory. Save 3 real unified diffs into
+-`packages/core/test/fixtures` (one small, one medium, one with a lockfile) before T3.
+-
+-## Prompt 1 — plan the skeleton (Plan or Ask mode)
+-
+-Read @AGENTS.md, @docs/SPEC-F1.md, @docs/TASKS.md and @NOW.md.
+-I'm on T1. Propose the exact files for the monorepo skeleton: root package.json scripts,
+-turbo.json, packages/core/package.json, tsconfig layout, a Vitest config and one trivial test.
+-List any question you have in one line each. Do not write files yet.
+-
+-## Prompt 2 — build T1 (Agent mode, after approving the plan)
+-
+-Approved. Create exactly the files from your plan. Then tell me the verify command.
+-Do not touch apps/web beyond adding it to the workspace.
+-
+-## Prompt 3 — T2 schema (Agent mode)
+-
+-Read @docs/SPEC-F1.md section "ChangeModel". I'm on T2. Create packages/core/src/schema.ts
+-with Zod schemas for ChangeModel and its parts, exported inferred types, and one test that
+-parses a minimal valid model and rejects a component with no hunks.
+-
+-## Prompt 4 — T3 diff parser (Plan first, then Agent)
+-
+-I'm on T3. Read @packages/core/src/schema.ts and the fixtures in @packages/core/test/fixtures.
+-Plan a diff parser that returns Hunk[] with stable ids, file, startLine, endLine, kind
+-(added|modified|removed), and drops lockfiles and generated files. Then write it with tests
+-against the fixtures. No network. No AI.
+-
+-## Prompt 5 — T4 model call (Plan first)
+-
+-I'm on T4. Read @packages/core/src/schema.ts and @AGENTS.md "Non-negotiables".
+-Plan packages/core/src/ai/analyze.ts: Vercel AI SDK, provider chosen by AI_PROVIDER
+-(groq | anthropic), structured output matching the ChangeModel schema, a system prompt
+-that treats the diff as untrusted data, and an input cap of 60k characters trimmed by
+-hunk rank. Test with a mocked model. Show me the system prompt before writing the file.
+-
+-## Prompts 6–9
+-
+-One ticket each, same shape: "I'm on Tn. Read @the two or three relevant files. Plan. Then build with tests."
+diff --git a/docs/TASKS.md b/docs/TASKS.md
+deleted file mode 100644
+index 5829c45..0000000
+--- a/docs/TASKS.md
++++ /dev/null
+@@ -1,13 +0,0 @@
+-# Tasks for F1
+-
+-Each task is one Cursor chat. Done when the "verify" command passes and the human has read the diff.
+-
+-- [x] T1 Monorepo skeleton. pnpm workspaces + Turborepo; apps/web (existing Next app moved in); packages/core with Vitest. Verify: `pnpm build && pnpm test`.
+-- [ ] T2 ChangeModel schema in packages/core/src/schema.ts (Zod) + types. Verify: `pnpm test` with a schema parse test.
+-- [ ] T3 Diff parser in packages/core/src/diff.ts: split unified diff into hunks with stable ids (file + index + hash), drop lockfiles/generated files, line ranges. Verify: fixture tests on 3 real diffs.
+-- [ ] T4 Model call in packages/core/src/ai/analyze.ts via Vercel AI SDK (provider from env: groq | anthropic), structured output = ChangeModel. Verify: a test with a mocked provider; one manual run.
+-- [ ] T5 Convex: schema + analyzePr action + getBrief query. Verify: run against one PR from the Convex dashboard.
+-- [ ] T6 Predict + Read screens. Verify: manual, prediction locked and scored.
+-- [ ] T7 Answer screen + gradeAnswer action. Verify: manual, three verdicts with line refs.
+-- [ ] T8 Reveal screen: deterministic SVG renderer (dagre/elk) from the stored model, prediction overlay, evidence sheet, corrections. Verify: manual on 3 PRs.
+-- [ ] T9 Dogfood week: 10 of my own PRs through the loop; log cost per PR and every "this is wrong".
+diff --git a/docs/WORKFLOW.md b/docs/WORKFLOW.md
+deleted file mode 100644
+index 6289959..0000000
+--- a/docs/WORKFLOW.md
++++ /dev/null
+@@ -1,23 +0,0 @@
+-# Dekko agent workflow
+-
+-How the guidance files in this repo fit together:
+-
+-- AGENTS.md: the always-on contract. Short on purpose; Cursor loads it into every chat.
+-- .cursor/rules/*.mdc: focused rules. Only core.mdc is always on; the rest load by file path.
+-- NOW.md: the single next task. Update it at the end of every session.
+-- .cursor/rules/: core (always), monorepo, nextjs, testing, ai-analysis, convex (by path).
+-- docs/SPEC-F1.md: what "done" means for F1.
+-- docs/TASKS.md: the tickets, one chat each.
+-- docs/DECISIONS.md: why things are the way they are, so you stop re-deciding.
+-- docs/PROMPTS.md: the prompt sequence, including the first one.
+-
+-## Using Cursor Pro without burning the $20
+-
+-1. One ticket per chat. Start a new chat for each task so context stays small.
+-2. Plan or Ask mode first for anything touching more than two files; approve; then Agent.
+-3. @-mention the two or three files that matter. Don't let it search the whole repo.
+-4. Leave the model on Auto for routine tasks. Pick a strong model only for prompt design (T4) and hard bugs.
+-5. Run `pnpm test`, `pnpm build` and `pnpm lint` yourself in the terminal. Paste only the failing lines.
+-6. Paste exact error messages. Never say "fix all errors".
+-7. Never use Max mode. Keep Bugbot off. Check the usage dashboard every Friday.
+-8. Read every diff before accepting. After each task, write three lines in NOW.md: what changed, why, one risk.
+diff --git a/docs/tasks/README.md b/docs/tasks/README.md
+new file mode 100644
+index 0000000..920b319
+--- /dev/null
++++ b/docs/tasks/README.md
+@@ -0,0 +1,15 @@
++# Tasks
++
++| id | title | status | pr |
++|---|---|---|---|
++| T1 | Monorepo skeleton | done | |
++| T2 | ChangeModel Zod schema | done | https://github.com/BinayakDotel/dekko-monorepo/pull/1 |
++| T3 | Diff parser and validateAgainstDiff | in progress | |
++| T4 | Model call analyze.ts | todo | |
++| T5 | Convex schema + analyzePr + getBrief | todo | |
++| T6 | Predict + Read screens | todo | |
++| T7 | Answer screen + gradeAnswer | todo | |
++| T8 | Reveal screen SVG | todo | |
++| T9 | Dogfood week | todo | |
++
++Tickets live in this folder as `<ID>-<slug>.md`. Lifecycle: `/take` → `/build` → `/address` → `/done`.
+diff --git a/docs/tasks/T1-monorepo-skeleton.md b/docs/tasks/T1-monorepo-skeleton.md
+new file mode 100644
+index 0000000..05aaae4
+--- /dev/null
++++ b/docs/tasks/T1-monorepo-skeleton.md
+@@ -0,0 +1,30 @@
++---
++id: T1
++title: Monorepo skeleton
++status: done
++base: main
++pr: ""
++depends: []
++---
++
++## Goal
++pnpm workspaces + Turborepo; apps/web moved in; packages/core with Vitest.
++
++## Files
++- package.json
++- turbo.json
++- packages/core/
++
++## Done when
++`pnpm build`, `pnpm test`, and `pnpm lint` pass.
++
++## Verify
++just check
++
++## Decisions
++- Convex lives inside apps/web/convex for now.
++- Node 22+; `@dekko/core` is source-only with `transpilePackages`.
++- TypeScript pinned at 5.9.3 because TS 7 is untested with Next 16.
++
++## Outcome
++Monorepo skeleton lands so every later ticket has a home. Risk: TypeScript pin at 5.9.3.
+diff --git a/docs/tasks/T2-changemodel-schema.md b/docs/tasks/T2-changemodel-schema.md
+new file mode 100644
+index 0000000..884acd0
+--- /dev/null
++++ b/docs/tasks/T2-changemodel-schema.md
+@@ -0,0 +1,31 @@
++---
++id: T2
++title: ChangeModel Zod schema
++status: done
++base: main
++pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/1"
++depends: [T1]
++---
++
++## Goal
++ChangeModel Zod schema with cross-field checks (unique ids, edge endpoints, ranks 1..n, one question per kind).
++
++## Files
++- packages/core/src/schema.ts
++- packages/core/src/schema.test.ts
++- docs/SPEC-F1.md
++
++## Done when
++Schema parse tests pass; invalid models are rejected at the specific issue path.
++
++## Verify
++just test-q
++
++## Decisions
++- confidence is a number 0–1 (UI buckets it; below 0.6 is drawn dashed).
++- Enums are closed with `other`; component kinds include `external`.
++- Question kinds are spelled `data-flow`, `failure`, `debugging`.
++- Cardinalities are strict (exactly 3 questions, 1–3 key hunks); the AI layer retries on failure.
++
++## Outcome
++Typed contract every later ticket reads and writes. Risk: strict cardinalities force AI retry rather than loosened schema.
+diff --git a/docs/tasks/T3-diff-parser.md b/docs/tasks/T3-diff-parser.md
+new file mode 100644
+index 0000000..424782a
+--- /dev/null
++++ b/docs/tasks/T3-diff-parser.md
+@@ -0,0 +1,42 @@
++---
++id: T3
++title: Diff parser and validateAgainstDiff
++status: in progress
++base: main
++pr: ""
++depends: [T2]
++---
++
++## Goal
++Turn a unified diff into addressable hunks, and check a ChangeModel only cites hunks that exist.
++Hunk ids are h1..hn in diff order, stable per head SHA (DECISIONS 2026-10-06).
++Each Hunk also carries its text. `parseDiff` returns `{ hunks, skippedFiles }`.
++
++## Files
++- packages/core/src/schema.ts
++- packages/core/src/index.ts
++- docs/SPEC-F1.md
++- docs/DECISIONS.md
++- packages/core/test/fixtures/ (3 real diffs: small, medium, one with a lockfile; create with `just fixture`)
++
++## Done when
++`parseDiff(text)` returns `{ hunks, skippedFiles }` where each hunk is
++`{ id, file, startLine, endLine, kind, text }` with lockfiles and generated files listed in
++`skippedFiles`, and `validateAgainstDiff(model, hunks)` reports every unknown hunk id,
++both covered by fixture tests on 3 real diffs.
++
++## Verify
++just test-q && just typecheck
++
++## Decisions
++- Hunk ranges: store `oldStart`, `oldLines`, `newStart`, `newLines` from the `@@` header. No special case; UI defaults to the new side.
++- `kind` from the file header, not line composition: `added` (new file mode), `removed` (deleted file mode), `renamed` (rename from), else `modified`.
++- `text`: full hunk including the `@@` header.
++- `skippedFiles`: `string[]` of paths.
++- Skip: lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `Cargo.lock`, `go.sum`, `*.lock`), generated (`*.min.js`, `*.min.css`, `dist/`, `build/`, `.next/`, `*.map`, `*.snap`), and binary diffs — binaries listed in `skippedFiles`.
++- `validateAgainstDiff` → `{ ok: true } | { ok: false; unknownHunkIds: string[] }`, checking ids on components, edges, keyHunks, questions.
++- Export Zod schemas + inferred types for `Hunk` / parse result from `diff.ts`, re-export via `index.ts`.
++- Fixtures: human creates 3 real diffs with `just fixture` before `/build`.
++
++## Outcome
++
+diff --git a/docs/tasks/T4-model-call.md b/docs/tasks/T4-model-call.md
+new file mode 100644
+index 0000000..0524d25
+--- /dev/null
++++ b/docs/tasks/T4-model-call.md
+@@ -0,0 +1,27 @@
++---
++id: T4
++title: Model call analyze.ts
++status: todo
++base: main
++pr: ""
++depends: [T3]
++---
++
++## Goal
++Model call in `packages/core/src/ai/analyze.ts` via Vercel AI SDK (provider from env: groq | anthropic), structured output = ChangeModel.
++
++## Files
++- packages/core/src/schema.ts
++- packages/core/src/diff.ts
++- docs/SPEC-F1.md
++- AGENTS.md (non-negotiables)
++
++## Done when
++A test with a mocked provider passes; one manual run succeeds against a real PR diff.
++
++## Verify
++just test-q
++
++## Decisions
++
++## Outcome
+diff --git a/docs/tasks/T5-convex-brief.md b/docs/tasks/T5-convex-brief.md
+new file mode 100644
+index 0000000..0ec9d73
+--- /dev/null
++++ b/docs/tasks/T5-convex-brief.md
+@@ -0,0 +1,26 @@
++---
++id: T5
++title: Convex schema + analyzePr + getBrief
++status: todo
++base: main
++pr: ""
++depends: [T4]
++---
++
++## Goal
++Convex schema plus `analyzePr` action and `getBrief` query.
++
++## Files
++- apps/web/convex/
++- packages/core/src/ai/analyze.ts
++- docs/SPEC-F1.md
++
++## Done when
++Runnable against one PR from the Convex dashboard.
++
++## Verify
++Manual: analyze one PR URL in the Convex dashboard; `getBrief` returns the stored model.
++
++## Decisions
++
++## Outcome
+diff --git a/docs/tasks/T6-predict-read.md b/docs/tasks/T6-predict-read.md
+new file mode 100644
+index 0000000..473dfae
+--- /dev/null
++++ b/docs/tasks/T6-predict-read.md
+@@ -0,0 +1,26 @@
++---
++id: T6
++title: Predict + Read screens
++status: todo
++base: main
++pr: ""
++depends: [T5]
++---
++
++## Goal
++Predict and Read screens for the brief.
++
++## Files
++- apps/web/
++- docs/SPEC-F1.md
++- docs/designs/prototype.html
++
++## Done when
++Manual: prediction locked and scored; key hunks shown one at a time with why.
++
++## Verify
++Manual on one PR session.
++
++## Decisions
++
++## Outcome
+diff --git a/docs/tasks/T7-answer-grade.md b/docs/tasks/T7-answer-grade.md
+new file mode 100644
+index 0000000..cccacac
+--- /dev/null
++++ b/docs/tasks/T7-answer-grade.md
+@@ -0,0 +1,26 @@
++---
++id: T7
++title: Answer screen + gradeAnswer
++status: todo
++base: main
++pr: ""
++depends: [T6]
++---
++
++## Goal
++Answer screen plus `gradeAnswer` action.
++
++## Files
++- apps/web/
++- apps/web/convex/
++- docs/SPEC-F1.md
++
++## Done when
++Manual: three verdicts (right / partly / wrong) with line refs.
++
++## Verify
++Manual on one PR session.
++
++## Decisions
++
++## Outcome
+diff --git a/docs/tasks/T8-reveal-svg.md b/docs/tasks/T8-reveal-svg.md
+new file mode 100644
+index 0000000..6c90ab1
+--- /dev/null
++++ b/docs/tasks/T8-reveal-svg.md
+@@ -0,0 +1,26 @@
++---
++id: T8
++title: Reveal screen SVG
++status: todo
++base: main
++pr: ""
++depends: [T7]
++---
++
++## Goal
++Reveal screen: deterministic SVG renderer (dagre/elk) from the stored model, prediction overlay, evidence sheet, corrections.
++
++## Files
++- apps/web/
++- packages/core/
++- docs/SPEC-F1.md
++
++## Done when
++Manual on 3 PRs: every component and edge opens its cited hunk; corrections store.
++
++## Verify
++Manual on 3 PRs.
++
++## Decisions
++
++## Outcome
+diff --git a/docs/tasks/T9-dogfood-week.md b/docs/tasks/T9-dogfood-week.md
+new file mode 100644
+index 0000000..3c9e957
+--- /dev/null
++++ b/docs/tasks/T9-dogfood-week.md
+@@ -0,0 +1,24 @@
++---
++id: T9
++title: Dogfood week
++status: todo
++base: main
++pr: ""
++depends: [T8]
++---
++
++## Goal
++Dogfood week: 10 of my own PRs through the loop; log cost per PR and every "this is wrong".
++
++## Files
++- docs/SPEC-F1.md
++
++## Done when
++10 PRs completed; cost and correction log written (path TBD in Decisions).
++
++## Verify
++Manual: count of sessions ≥ 10 and a cost/corrections log exists.
++
++## Decisions
++
++## Outcome
+diff --git a/justfile b/justfile
+index fcfb31f..02d977e 100644
+--- a/justfile
++++ b/justfile
+@@ -25,11 +25,22 @@ restart: stop run
+ test pkg="":
+     {{ if pkg == "" { "pnpm test" } else { "pnpm --filter " + pkg + " test" } }}
+ 
+-# Lint, typecheck and test
++# Lint, typecheck and quiet tests
+ check:
+     pnpm lint
+     pnpm typecheck
+-    pnpm test
++    just test-q
++
++# Quiet test run for agents: last 40 lines, flags truncation, keeps exit code
++test-q pkg="@dekko/core":
++    #!/usr/bin/env bash
++    set -uo pipefail
++    export CI=true
++    out=$(pnpm --filter {{pkg}} exec vitest run --reporter=dot 2>&1); code=$?
++    printf '%s\n' "$out" | tail -n 40
++    n=$(printf '%s\n' "$out" | wc -l | tr -d ' ')
++    [ "$n" -gt 40 ] && echo "TRUNCATED: $n lines, showing last 40"
++    exit $code
+ 
+ lint:
+     pnpm lint
+@@ -45,7 +56,7 @@ format:
+ 
+ # Save a PR diff as a fixture: just fixture <pr-url> <name>
+ fixture url name:
+-    mkdir -p fixtures
+-    gh pr diff {{url}} > fixtures/{{name}}.diff
+-    gh pr view {{url}} --json title,body,number,headRefName,baseRefName > fixtures/{{name}}.meta.json
+-    @echo "saved fixtures/{{name}}.diff and fixtures/{{name}}.meta.json"
++    mkdir -p packages/core/test/fixtures
++    gh pr diff {{url}} > packages/core/test/fixtures/{{name}}.diff
++    gh pr view {{url}} --json title,body,number,headRefName,baseRefName > packages/core/test/fixtures/{{name}}.meta.json
++    @echo "saved packages/core/test/fixtures/{{name}}.diff and {{name}}.meta.json"
