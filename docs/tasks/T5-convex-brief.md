@@ -1,7 +1,7 @@
 ---
 id: T5
 title: Convex schema + analyzePr + getBrief
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/6"
 depends: [T4]
