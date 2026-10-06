@@ -1,7 +1,7 @@
 ---
 id: T6
 title: Predict + Read screens
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T5]
