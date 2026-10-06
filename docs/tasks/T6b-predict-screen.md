@@ -1,7 +1,7 @@
 ---
 id: T6b
 title: Convex provider, URL form, Predict screen
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T6]
