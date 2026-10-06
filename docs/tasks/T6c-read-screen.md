@@ -1,6 +1,6 @@
 ---
 id: T6c
-title: Read screen
+title: Brief chrome + Predict matches prototype
 status: in progress
 base: main
 pr: ""
@@ -8,26 +8,34 @@ depends: [T6b]
 ---
 
 ## Goal
-Show the top key hunks (rank order, max 3) one at a time, each with its one-line why.
 Extract the shared brief chrome (top bar with brand, PR title, step bar, time; centered column at
-var(--measure) with var(--pad-screen)) into one component used by Predict and Read. While doing so,
-make Predict match docs/design/prototype.html exactly: step label .84rem muted, question in
-font-display at 1.3rem, hint .88rem muted, chips .35rem .85rem at .88rem, sentence box 2 rows. Tokens only.
+var(--measure) with var(--pad-screen)) into one component, and move Predict onto it.
+While doing so, make Predict match docs/design/prototype.html exactly: step label .84rem muted,
+question in font-display at 1.3rem, hint .88rem muted, chips .35rem .85rem at .88rem, sentence box
+2 rows. Tokens only. Refactor only; the Read screen is T6d.
 
 ## Files
-- docs/design/prototype.html (Predict and Read screens)
+- docs/design/prototype.html (Predict screen, `briefTop`, `.steps`)
 - apps/web/components/BriefChrome.tsx (new; shared top bar + column)
-- apps/web/app/brief/[changeModelId]/page.tsx (restyle, use the chrome)
-- apps/web/app/session/[sessionId]/read/[n]/page.tsx (new)
+- apps/web/app/brief/[changeModelId]/page.tsx (use the chrome, restyle)
 
 ## Done when
-Manual: key hunks show one per screen with file path, line numbers and why. Next and Back work, and
-the last screen's button reads "I've read these, ask me" and goes to Answer (T7).
+Manual: Predict looks the same as the prototype's Predict screen, and locking still goes to
+`/session/[sessionId]/read/0`.
 
 ## Verify
-Manual on one PR session.
+`just check`. Manual on one PR.
 
 ## Decisions
-See T6 Decisions. No "Show the whole diff".
+- Split from the original T6c: this ticket is the refactor (chrome + Predict restyle). The Read
+  screen moved to T6d, stacked on this one. T7 now depends on T6d.
+- `BriefChrome` props: `title`, `step` (0–3, the current step index) and `timeLabel` (string).
+  The step bar marks steps before `step` as done (`bg-ok`), the current one `bg-accent`, the rest
+  `bg-line`, matching the prototype's `.steps i.done` / `.on`.
+- `BriefChrome` renders the top bar and the centered `<main>` column, taking the screen body as
+  `children`. It's presentational: no data fetching, no "use client" of its own.
+- Predict passes `step={0}` and `timeLabel="about 4 min"`. No behavior change.
+- Predict's current values already mostly match; fix only what differs from the prototype CSS.
+  Tokens only, no hex.
 
 ## Outcome
