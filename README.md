@@ -22,7 +22,8 @@ GitHub-centric tool: prove you understand a PR before merging — Predict → Re
 ```bash
 just              # list recipes
 just install      # pnpm install
-just run          # dev servers
+just run          # Next dev server
+just run-all      # Convex + Next together
 just test-q       # quiet vitest (agents)
 just check        # lint + typecheck + test-q
 just typecheck

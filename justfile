@@ -1,6 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 port := "3000"
+convex_port := "3210"
 
 # List recipes
 default:
@@ -10,13 +11,27 @@ default:
 install:
     pnpm install
 
-# Start the dev server(s)
+# Start the dev server(s) (Next only; start Convex separately)
 run:
     pnpm dev
 
-# Stop whatever is listening on the dev port
+# Start Convex + Next together
+run-all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    (cd apps/web && pnpm exec convex dev) &
+    convex_pid=$!
+    cleanup() {
+      kill "$convex_pid" 2>/dev/null || true
+      wait "$convex_pid" 2>/dev/null || true
+    }
+    trap cleanup EXIT INT TERM
+    pnpm dev
+
+# Stop whatever is listening on the dev / Convex ports
 stop:
     -lsof -ti tcp:{{port}} | xargs kill 2>/dev/null && echo "stopped :{{port}}" || echo "nothing on :{{port}}"
+    -lsof -ti tcp:{{convex_port}} | xargs kill 2>/dev/null && echo "stopped :{{convex_port}}" || echo "nothing on :{{convex_port}}"
 
 # Stop, then start again
 restart: stop run
