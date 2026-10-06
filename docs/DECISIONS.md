@@ -13,3 +13,10 @@
 - 2026-10-06 Ticket lifecycle: one markdown file per ticket under `docs/tasks/`; skills `/take` `/implement` `/address` `/done`. `/take` and `/done` may commit `docs/tasks/**` on main; feature work never commits on main.
 - 2026-10-06 Renamed lifecycle skill `/build` → `/implement` so it appears in Cursor’s skill picker (`build` was too generic).
 - 2026-10-06 Lesson: rejection tests must assert the specific issue path, not just `success === false`. A mutation check (comment out one rule, expect one red test) catches tests that pass for the wrong reason.
+
+
+
+# Lessons
+
+- 2026-10-06 Groq free tier allows 8k tokens per minute on gpt-oss-120b, so only small PRs fit. Dogfood runs on Anthropic; Groq stays for small Tier-1 calls.
+
