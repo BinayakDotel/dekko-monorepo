@@ -1,7 +1,7 @@
 ---
 id: T6c
 title: Read screen
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T6b]
@@ -9,9 +9,15 @@ depends: [T6b]
 
 ## Goal
 Show the top key hunks (rank order, max 3) one at a time, each with its one-line why.
+Extract the shared brief chrome (top bar with brand, PR title, step bar, time; centered column at
+var(--measure) with var(--pad-screen)) into one component used by Predict and Read. While doing so,
+make Predict match docs/design/prototype.html exactly: step label .84rem muted, question in
+font-display at 1.3rem, hint .88rem muted, chips .35rem .85rem at .88rem, sentence box 2 rows. Tokens only.
 
 ## Files
-- docs/designs/prototype.html (Read screen)
+- docs/design/prototype.html (Predict and Read screens)
+- apps/web/components/BriefChrome.tsx (new; shared top bar + column)
+- apps/web/app/brief/[changeModelId]/page.tsx (restyle, use the chrome)
 - apps/web/app/session/[sessionId]/read/[n]/page.tsx (new)
 
 ## Done when

@@ -9,7 +9,7 @@
 | T5 | Convex schema + analyzePr + getBrief | done | https://github.com/BinayakDotel/dekko-monorepo/pull/6 |
 | T6 | Predict backend (decoys, scoring, sessions) | done | https://github.com/BinayakDotel/dekko-monorepo/pull/7 |
 | T6b | Convex provider, URL form, Predict screen | done | https://github.com/BinayakDotel/dekko-monorepo/pull/8 |
-| T6c | Read screen | todo | |
+| T6c | Read screen | in progress | |
 | T7 | Answer screen + gradeAnswer | todo | |
 | T8 | Reveal screen SVG | todo | |
 | T9 | Dogfood week | todo | |
