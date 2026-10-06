@@ -1,7 +1,7 @@
 ---
 id: T5
 title: Convex schema + analyzePr + getBrief
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T4]
