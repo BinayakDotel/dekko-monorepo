@@ -1,7 +1,7 @@
 ---
 id: T6b
 title: Convex provider, URL form, Predict screen
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/8"
 depends: [T6]
