@@ -29,11 +29,17 @@ with `force`, `getBrief` returns title, files and chips, `startSession` stores a
 
 ## Decisions
 - Split approved: T6 (this, backend), T6b (Convex provider, home URL form, Predict screen), T6c (Read screen). T7 now depends on T6c.
-- **Affected** = components with status `added` / `modified` / `removed`. Components with status `context` show up as chips, but ticking one counts as neither a hit nor a false alarm.
-- `scorePrediction({ model, picked }) → { hits, missed, falseAlarms }` (arrays of chip ids), Zod-exported. Hits = picked ∩ affected, missed = affected − picked, false alarms = picked that are decoys. Pure, in `packages/core`.
+- **Affected** = components with status `added` / `modified` / `removed`. Everything else on the chip list (`context` components and path-made decoys) is not affected.
+- `scorePrediction({ model, picked }) → { hits, missed, falseAlarms }` (arrays of chip ids), Zod-exported. It's pure set arithmetic: hits = picked ∩ affected, missed = affected − picked, falseAlarms = picked − affected. Ticking a `context` component counts as a false alarm. Pure, in `packages/core`.
+- `scorePrediction` test cases (`predict.test.ts`):
+  - All affected ticked, nothing else: every affected id is a hit; missed and falseAlarms are empty.
+  - Nothing affected ticked: hits are empty; missed holds every affected id.
+  - A ticked `context` component lands in falseAlarms.
+  - A ticked path-made decoy lands in falseAlarms.
+  - A mix of affected, `context` and decoy ticks: each id lands in exactly one of hits, missed or falseAlarms. hits + missed = affected, and hits + falseAlarms = picked.
+  - Duplicate picks count once; output order is stable (sorted).
 - **Decoys** (`pickDecoys`): pure function in core, deterministic from `changeModelId` (seeded shuffle, no `Math.random`). Use the model's `context` components first. Then fill up to 3 with labels made from file paths that no affected component cites. Never take names from a fixed generic pool.
   - The repo tree isn't fetched, so "unchanged file paths" means PR files that no affected component's hunks touch. The label is the parent folder or file stem, made kebab-case, skipping any that clash with a real component id. If fewer than 3 candidates exist, show fewer.
-  - Open conflict: under the affected rule, ticking a `context` decoy scores neutral, so only path-made decoys can be false alarms. Resolved in `/implement` as: `context` decoys stay neutral, path-made decoys count as false alarms. Revisit if dogfooding shows that's too lenient.
 - Chips = affected components + decoys, in a deterministic shuffle so real ones aren't listed first. `getBrief` returns `chips: { id, label }[]` and never says which chips are decoys.
 - `analyzePr` stores `title` and `files: { path, kind }[]` from the parsed diff, plus skipped files. Both fields are optional in the schema so older docs still validate; re-run old PRs with `force: true`.
 - `startSession({ changeModelId, predictionText, predictedComponents })`: the mutation recomputes chips and the score on the server (it never trusts a client-sent score) and inserts with `userId: "local"`, `answers: []`, `startedAt`. It rejects an empty pick list or ids that aren't chips. The prediction is locked: there's no update mutation.
