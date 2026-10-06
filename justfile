@@ -60,3 +60,23 @@ fixture url name:
     gh pr diff {{url}} > packages/core/test/fixtures/{{name}}.diff
     gh pr view {{url}} --json title,body,number,headRefName,baseRefName > packages/core/test/fixtures/{{name}}.meta.json
     @echo "saved packages/core/test/fixtures/{{name}}.diff and {{name}}.meta.json"
+
+# Manual model call against a diff file (needs AI_PROVIDER + API key in the env)
+analyze path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    DIFF_PATH="{{path}}" pnpm --filter @dekko/core exec tsx -e '
+    import { readFileSync } from "node:fs";
+    import { parseDiff, analyze } from "./src/index.ts";
+    const text = readFileSync(process.env.DIFF_PATH!, "utf8");
+    const { hunks } = parseDiff(text);
+    const result = await analyze({ hunks });
+    console.log(JSON.stringify({
+      model: result.model,
+      attempts: result.attempts,
+      usage: result.usage,
+      truncated: result.truncated,
+      omittedFiles: result.omittedFiles,
+      summary: result.changeModel.summary,
+    }, null, 2));
+    '
