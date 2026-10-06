@@ -1,9 +1,9 @@
 ---
 id: T6b
 title: Convex provider, URL form, Predict screen
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/8"
 depends: [T6]
 ---
 
@@ -43,3 +43,9 @@ Manual on one PR.
   page there (T6c replaces it with the real Read UI).
 
 ## Outcome
+Wired Convex into the Next app (`ConvexClientProvider` + layout), replaced the home template with a
+PR URL form that calls `analyzePr` and routes to Predict, and built the Predict screen
+(`getPredictView` / chips / file toggle / lock via `startSession` → `/session/[id]/read/0` placeholder).
+Lock enablement is `canLockPrediction` in `@dekko/core` (≥1 chip and trimmed text ≥10).
+
+Risk: needs `NEXT_PUBLIC_CONVEX_URL` at runtime; malformed Convex IDs may error instead of `notFound()`.

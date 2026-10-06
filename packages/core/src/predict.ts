@@ -40,6 +40,11 @@ export const PickDecoysInputSchema = z.object({
 
 export const BuildChipsInputSchema = PickDecoysInputSchema;
 
+export const CanLockPredictionInputSchema = z.object({
+  predictionText: z.string(),
+  picked: z.array(z.string()),
+});
+
 export type PredictionScore = z.infer<typeof PredictionScoreSchema>;
 export type Chip = z.infer<typeof ChipSchema>;
 export type PrFile = z.infer<typeof PrFileSchema>;
@@ -47,6 +52,7 @@ export type HunkRef = z.infer<typeof HunkRefSchema>;
 export type ScorePredictionInput = z.infer<typeof ScorePredictionInputSchema>;
 export type PickDecoysInput = z.infer<typeof PickDecoysInputSchema>;
 export type BuildChipsInput = z.infer<typeof BuildChipsInputSchema>;
+export type CanLockPredictionInput = z.infer<typeof CanLockPredictionInputSchema>;
 
 function sortedUnique(ids: Iterable<string>): string[] {
   return [...new Set(ids)].sort();
@@ -165,4 +171,14 @@ export function buildChips(input: BuildChipsInput): Chip[] {
   const affected = affectedComponents(input.model).map((c) => ({ id: c.id, label: c.label }));
   const decoys = pickDecoys(input);
   return seededShuffle([...affected, ...decoys], `${input.changeModelId}:chips`);
+}
+
+/** Client lock gate: ≥1 chip and trimmed prediction text of at least 10 characters. */
+export const MIN_PREDICTION_LENGTH = 10;
+
+export function canLockPrediction(input: CanLockPredictionInput): boolean {
+  return (
+    input.picked.length >= 1 &&
+    input.predictionText.trim().length >= MIN_PREDICTION_LENGTH
+  );
 }
