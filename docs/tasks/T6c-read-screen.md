@@ -1,7 +1,7 @@
 ---
 id: T6c
 title: Brief chrome + Predict matches prototype
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/9"
 depends: [T6b]
