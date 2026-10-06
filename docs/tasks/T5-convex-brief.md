@@ -1,9 +1,9 @@
 ---
 id: T5
 title: Convex schema + analyzePr + getBrief
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/6"
 depends: [T4]
 ---
 
@@ -40,3 +40,4 @@ Manual: analyze one PR URL in the Convex dashboard; `getBrief` returns the store
 - No auth or tenant scoping yet (single user). Lookups go by id.
 
 ## Outcome
+Convex schema (`changeModels`, `hunks`, `sessions`, `corrections`) plus `analyzePr` / `getBrief` under `apps/web/convex`, with `parsePrUrl` in `@dekko/core`. Needed so a PR URL can be analyzed from the Convex dashboard and the stored brief (model + cited hunks + run metadata) can be read back. Risk: default Convex runtime must keep bundling the AI SDK/`@dekko/core` path; if it fails in the dashboard, split the action into a `"use node"` file.
