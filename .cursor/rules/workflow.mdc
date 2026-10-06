@@ -1,0 +1,9 @@
+---
+description: Small steps, small commits
+alwaysApply: true
+---
+- One ticket per chat. If a ticket needs more than ~5 files, propose a split and stop.
+- Work in steps that each leave the repo green. After each step: stop, summarize in 3 lines, propose a commit message (type(scope): subject), and wait for the human to commit.
+- Commits are stacked (Graphite). Keep each ticket's change independent of other unmerged tickets; never edit files belonging to another open ticket.
+- Never bundle a refactor with a feature.
+- If an approach fails twice, stop and write down what you learned. Do not try a third approach without asking.

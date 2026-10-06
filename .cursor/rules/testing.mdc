@@ -9,3 +9,8 @@ alwaysApply: false
 - Co-locate unit tests as `*.test.ts` next to the source; fixture-driven tests may live in `packages/core/test/`.
 - Run one package with `pnpm --filter @dekko/core test`; run everything with `pnpm test`.
 - Fix the code, not the test, unless the spec changed. Never weaken an assertion to get green.
+- packages/core: every exported function has unit tests. Pure logic, no mocks except the model.
+- Convex functions: a test per query/mutation using convex-test, run against the schema.
+- apps/web screens: no unit tests for layout; one Playwright flow per step of the brief (added at T6).
+- Tests are deterministic: fixed seeds, fixture diffs, no time-dependent assertions.
+- A bug fix starts with a failing test that reproduces it.
