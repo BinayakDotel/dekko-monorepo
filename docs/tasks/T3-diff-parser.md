@@ -1,7 +1,7 @@
 ---
 id: T3
 title: Diff parser and validateAgainstDiff
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/3"
 depends: [T2]
