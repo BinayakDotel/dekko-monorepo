@@ -1,7 +1,7 @@
 ---
 id: T4
 title: Model call analyze.ts
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T3]
