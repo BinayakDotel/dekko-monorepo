@@ -1,0 +1,56 @@
+---
+description: How agent work runs in this repo. Always on.
+alwaysApply: true
+---
+# Engineering
+
+## Lifecycle (one ticket per chat, one skill per chat)
+- Tickets live in `docs/tasks/<ID>-<slug>.md`; index in `docs/tasks/README.md`.
+  Status: todo → in progress → in review → done. Only the skills change status.
+- `/take`: sync, pick ticket, check out its base, grill (max 8 questions), write Decisions + Files. No code.
+- `/build`: TDD with `just test-q`, `just check`, `code-review`, write Outcome, `gt create` + `gt submit`.
+- `/address`: fix PR comments on the same branch, `gt modify` + `gt submit`.
+- `/done`: after the human merges, sync, mark done, update the index, name the next ticket.
+- No skill invoked and the request is ticket work: name the skill that fits and stop.
+
+## Git
+- Allowed: `gt sync -f`, `gt checkout`, `gt create -am "<type(scope): subject>"`, `gt submit`, `gt modify -a`, read-only `gh`.
+- Exception: `/take` and `/done` may commit only files under `docs/tasks/**` on main with
+  `git commit -m "chore(tasks): …"` and `git push origin main`. Nothing else is ever committed on main.
+- Forbidden: `git commit` / `git push` outside that exception, any other commit on main,
+  `git reset`, `git rebase`, `git push --force`, `gt merge`. The human merges feature PRs on GitHub.
+- Never edit files listed in another `in progress` or `in review` ticket.
+- Never bundle a refactor with a feature. Never add a dependency without one sentence of why.
+- Never read or print `.env*` files.
+
+## Quality gates
+- Every behavior change ships with a test in the same change. Repo green after each step.
+- Before `gt create`: `just check` passes and `code-review` findings that are real are fixed.
+- Pure logic goes in `packages/core`: no I/O, unit-testable with Vitest.
+- No `any`. Export Zod schemas and infer types from them. Functions under 40 lines; split, don't nest.
+- A ticket needing more than ~5 files is split into stacked tickets before building.
+- Unsure between two designs: state both in two lines and ask. Never build both.
+
+## Commands
+- Run everything through the justfile (`just test-q`, `just typecheck`, `just check`, `just lint`, `just fixture`).
+  Raw `pnpm` only when no recipe exists.
+
+## Token discipline
+- Start from the ticket and its Files. For anything else use codebase search, then open files one at a time.
+- Never bulk-read the repo, lockfiles, `node_modules`, or fixtures (first 40 lines at most).
+- Tests only via `just test-q`. If it prints `TRUNCATED`, stop and say so.
+  Prefer `just typecheck` over `just build`. Never `pnpm install` unless you added a dependency.
+- Never edit `AGENTS.md` or `.cursor/rules/*` during a ticket; propose changes in the report.
+- Shortest complete answer. No restating the task, no previews, no pasted diffs (the PR is the diff).
+- If the chat drifts beyond the ticket, say so and stop.
+- Two failed attempts: stop, add a dated lesson to `docs/DECISIONS.md`, ask.
+
+## Models
+| Work | Model | Effort |
+|---|---|---|
+| `/take` | Claude Sonnet 5.5 | Medium |
+| `/build`, `/address`, `/done` | Auto | Low |
+| Hard bug after two failed attempts | Claude Opus 5.5 | Medium |
+| Never for routine work | Fable, any High effort | |
+
+End every reply with one line: `Next: /<skill> on <model>, effort <level>.`
