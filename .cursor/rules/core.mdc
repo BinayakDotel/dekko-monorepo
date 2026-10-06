@@ -1,0 +1,13 @@
+---
+description: Always-on rules for this repo
+alwaysApply: true
+---
+- Read `NOW.md` first. Work only on the ticket it names.
+- Before changing code, restate the ticket's "done when" in one line.
+- Prefer editing the files the user @-mentioned. Ask before reading the whole repo.
+- Pure logic goes in packages/core and must be unit-testable with Vitest.
+- No `any`. Export Zod schemas and infer types from them.
+- Keep functions under 40 lines; split instead of nesting.
+- When unsure between two designs, state both in two lines and ask. Do not implement both.
+- Never run git commit or git push. Never print or read `.env*` files.
+- After finishing, list: files changed, how to verify, one risk. Nothing else.

@@ -1,0 +1,14 @@
+---
+description: Monorepo, package and tooling conventions
+globs: package.json,**/package.json,turbo.json,pnpm-workspace.yaml,tsconfig*.json,**/tsconfig*.json,**/vitest.config.ts
+alwaysApply: false
+---
+- pnpm only. Never use npm or yarn, never commit a second lockfile.
+- Pin exact versions (no `^`) for tooling already pinned at the root; use `workspace:*` for internal packages.
+- Run tasks through the root scripts (turbo). Each package exposes `build`, `test`, `typecheck`; web also has `lint`.
+- `@dekko/core` is source-only: `main` and `exports` point at `src/index.ts`. Do not add tsup or a `dist`.
+- Any package that imports `@dekko/core` in a Next app must be listed in `transpilePackages`.
+- tsconfigs extend `tsconfig.base.json`. Do not duplicate its compiler options.
+- Prettier uses the default config. Do not add custom lint or format rules without a decision in `docs/DECISIONS.md`.
+- Turbo and Next write agent-guidance blocks into AGENTS.md files. Leave those blocks as generated.
+- Check the installed turbo docs (`node_modules/turbo/docs`) before changing `turbo.json`.

@@ -1,0 +1,11 @@
+---
+description: Testing conventions
+globs: **/*.test.ts,**/*.test.tsx,packages/core/test/**
+alwaysApply: false
+---
+- Vitest. One behavior per test. Name tests as sentences: "drops lockfile sections".
+- Use real fixture diffs under packages/core/test/fixtures; never hand-write fake diffs inline.
+- Tests for packages/core must not touch the network or the filesystem outside fixtures.
+- Co-locate unit tests as `*.test.ts` next to the source; fixture-driven tests may live in `packages/core/test/`.
+- Run one package with `pnpm --filter @dekko/core test`; run everything with `pnpm test`.
+- Fix the code, not the test, unless the spec changed. Never weaken an assertion to get green.

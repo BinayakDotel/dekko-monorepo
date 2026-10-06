@@ -1,0 +1,12 @@
+---
+description: Next.js App Router conventions for apps/web
+globs: apps/web/app/**,apps/web/components/**,apps/web/next.config.ts
+alwaysApply: false
+---
+- This Next version differs from your training data. Read the relevant guide in `apps/web/node_modules/next/dist/docs/` before writing code.
+- App Router only. Server Components by default; add "use client" only for state, events or browser APIs.
+- Route handlers are thin: parse input, call a function from `@dekko/core` or a Convex function, return JSON.
+- `params` in route handlers is a Promise; await it.
+- No secrets in client components. Only NEXT_PUBLIC_ variables reach the browser.
+- Import shared logic from `@dekko/core` (already in `transpilePackages`). Do not copy it into the app.
+- Minimal UI: one primary action per screen. Follow the four-step brief in docs/SPEC-F1.md.

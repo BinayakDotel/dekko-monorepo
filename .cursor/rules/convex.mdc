@@ -1,0 +1,9 @@
+---
+description: Convex conventions for apps/web/convex
+globs: apps/web/convex/**
+alwaysApply: false
+---
+<!-- Replace this file's body with Convex's official AI guidelines for Cursor
+     (see https://docs.convex.dev/ai) and keep the two rules below at the end. -->
+- Queries and mutations must finish fast; anything that calls GitHub or a model is an action.
+- Scope every query by the tenant/repo it belongs to. No cross-tenant reads.
