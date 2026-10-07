@@ -1,9 +1,9 @@
 ---
 id: T7a
 title: gradeAnswer core (grade + prompt + scoreAnswers)
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/11"
 depends: [T6d]
 ---
 
@@ -37,3 +37,4 @@ plus `scoreAnswers`. No Convex, no UI.
 - `formatLineRef(lineRef, hunks)` → `"path:L42"` for UI rendering (pure).
 
 ## Outcome
+Added pure core grading: `grade()` (mocked-model retries on Zod / bad line refs, 60k hunk packing) plus `scoreAnswers` / `formatLineRef`. Enables T7b Convex + Answer UI without I/O in core. Risk: line-ref validation uses packed hunks only, so a cite to a budget-dropped question hunk always retries.
