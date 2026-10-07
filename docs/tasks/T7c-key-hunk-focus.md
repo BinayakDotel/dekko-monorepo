@@ -1,7 +1,7 @@
 ---
 id: T7c
 title: Key-hunk focus ranges and sharper why lines
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T6d]
