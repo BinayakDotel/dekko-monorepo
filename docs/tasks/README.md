@@ -11,7 +11,7 @@
 | T6b | Convex provider, URL form, Predict screen | done | https://github.com/BinayakDotel/dekko-monorepo/pull/8 |
 | T6c | Brief chrome + Predict matches prototype | done | https://github.com/BinayakDotel/dekko-monorepo/pull/9 |
 | T6d | Read screen | done | https://github.com/BinayakDotel/dekko-monorepo/pull/10 |
-| T7 | Answer screen + gradeAnswer | todo | |
+| T7 | Answer screen + gradeAnswer | in progress | |
 | T8 | Reveal screen SVG | todo | |
 | T9 | Dogfood week | todo | |
 
