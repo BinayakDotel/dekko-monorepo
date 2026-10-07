@@ -1,7 +1,7 @@
 ---
 id: T7c
 title: Key-hunk focus ranges and sharper why lines
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/13"
 depends: [T6d]
