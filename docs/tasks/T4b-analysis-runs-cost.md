@@ -1,7 +1,7 @@
 ---
 id: T4b
 title: analysisRuns table + costUsd
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T4a]
