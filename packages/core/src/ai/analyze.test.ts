@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { MockLanguageModelV4 } from "ai/test";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import { parseDiff, type Hunk } from "../diff";
 import type { ChangeModel } from "../schema";
-import { analyze } from "./analyze";
+import { analyze, resolveAnalyzeEnv } from "./analyze";
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../test/fixtures");
 
@@ -70,6 +70,18 @@ function enlargeFromFixture(seed: Hunk, id: string, file: string, repeats: numbe
 }
 
 describe("analyze", () => {
+  const envSnapshot = {
+    AI_PROVIDER: process.env.AI_PROVIDER,
+    AI_MODEL: process.env.AI_MODEL,
+  };
+
+  afterEach(() => {
+    if (envSnapshot.AI_PROVIDER === undefined) delete process.env.AI_PROVIDER;
+    else process.env.AI_PROVIDER = envSnapshot.AI_PROVIDER;
+    if (envSnapshot.AI_MODEL === undefined) delete process.env.AI_MODEL;
+    else process.env.AI_MODEL = envSnapshot.AI_MODEL;
+  });
+
   test("returns a ChangeModel from a mocked provider", async () => {
     const hunks = loadFixtureHunks("small.diff");
     expect(hunks.length).toBeGreaterThan(0);
@@ -81,11 +93,40 @@ describe("analyze", () => {
 
     expect(result.changeModel.components[0]!.hunks).toEqual([hunkId]);
     expect(result.model).toBe("mock-analyze");
+    expect(result.provider).toBe("injected");
+    expect(result.upstream).toBeUndefined();
     expect(result.attempts).toBe(1);
     expect(result.truncated).toBe(false);
     expect(result.omittedFiles).toEqual([]);
     expect(result.usage.inputTokens).toBe(10);
     expect(result.usage.outputTokens).toBe(20);
+  });
+
+  test("throws when AI_PROVIDER is an explicit unknown value", () => {
+    process.env.AI_PROVIDER = "not-a-provider";
+    expect(() => resolveAnalyzeEnv()).toThrow(
+      'AI_PROVIDER must be "groq", "anthropic", or "openrouter"',
+    );
+  });
+
+  test("defaults unset AI_PROVIDER to openrouter with pinned upstream", () => {
+    delete process.env.AI_PROVIDER;
+    delete process.env.AI_MODEL;
+    expect(resolveAnalyzeEnv()).toEqual({
+      provider: "openrouter",
+      modelId: "openai/gpt-oss-120b",
+      upstream: "coreweave",
+    });
+  });
+
+  test("AI_PROVIDER=openrouter returns provider and upstream", () => {
+    process.env.AI_PROVIDER = "openrouter";
+    delete process.env.AI_MODEL;
+    expect(resolveAnalyzeEnv()).toEqual({
+      provider: "openrouter",
+      modelId: "openai/gpt-oss-120b",
+      upstream: "coreweave",
+    });
   });
 
   test("retries when the model cites an unknown hunk id", async () => {

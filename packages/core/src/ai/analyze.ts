@@ -1,5 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { groq } from "@ai-sdk/groq";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import {
   generateText,
   NoObjectGeneratedError,
@@ -14,10 +15,17 @@ import { ChangeModelSchema, type ChangeModel } from "../schema";
 const HUNK_CHAR_BUDGET = 60_000;
 const MAX_ATTEMPTS = 3;
 
+/** Checked 2026-10-07 on openrouter.ai/openai/gpt-oss-120b: cheapest with structured_outputs + reasoning ($0.03/$0.17 per 1M). */
+const OPENROUTER_UPSTREAM = "coreweave";
+
 const DEFAULT_MODELS = {
   groq: "openai/gpt-oss-120b",
   anthropic: "claude-sonnet-5-5",
+  openrouter: "openai/gpt-oss-120b",
 } as const;
+
+type EnvProvider = keyof typeof DEFAULT_MODELS;
+type AnalyzeProvider = EnvProvider | "injected";
 
 export type AnalyzeInput = {
   hunks: readonly Hunk[];
@@ -32,6 +40,8 @@ export type AnalyzeOptions = {
 export type AnalyzeResult = {
   changeModel: ChangeModel;
   model: string;
+  provider: AnalyzeProvider;
+  upstream: string | undefined;
   attempts: number;
   usage: LanguageModelUsage;
   truncated: boolean;
@@ -98,17 +108,62 @@ function modelIdOf(model: LanguageModel): string {
   return typeof model === "string" ? model : model.modelId;
 }
 
-function resolveModel(opts?: AnalyzeOptions): { model: LanguageModel; modelId: string } {
+function isEnvProvider(value: string): value is EnvProvider {
+  return value === "groq" || value === "anthropic" || value === "openrouter";
+}
+
+/** Env → provider/model/upstream. Public for unit tests (no network). */
+export function resolveAnalyzeEnv(): {
+  provider: EnvProvider;
+  modelId: string;
+  upstream: string | undefined;
+} {
+  const raw = process.env.AI_PROVIDER;
+  let provider: EnvProvider;
+  if (raw === undefined || raw === "") provider = "openrouter";
+  else if (isEnvProvider(raw)) provider = raw;
+  else throw new Error('AI_PROVIDER must be "groq", "anthropic", or "openrouter"');
+  return {
+    provider,
+    modelId: process.env.AI_MODEL ?? DEFAULT_MODELS[provider],
+    upstream: provider === "openrouter" ? OPENROUTER_UPSTREAM : undefined,
+  };
+}
+
+function languageModelFor(provider: EnvProvider, modelId: string): LanguageModel {
+  if (provider === "openrouter") {
+    return openrouter(modelId, {
+      provider: {
+        order: [OPENROUTER_UPSTREAM],
+        allow_fallbacks: false,
+        require_parameters: true,
+      },
+    });
+  }
+  return provider === "groq" ? groq(modelId) : anthropic(modelId);
+}
+
+function resolveModel(opts?: AnalyzeOptions): {
+  model: LanguageModel;
+  modelId: string;
+  provider: AnalyzeProvider;
+  upstream: string | undefined;
+} {
   if (opts?.model) {
-    return { model: opts.model, modelId: modelIdOf(opts.model) };
+    return {
+      model: opts.model,
+      modelId: modelIdOf(opts.model),
+      provider: "injected",
+      upstream: undefined,
+    };
   }
-  const provider = process.env.AI_PROVIDER;
-  if (provider !== "groq" && provider !== "anthropic") {
-    throw new Error('AI_PROVIDER must be "groq" or "anthropic"');
-  }
-  const modelId = process.env.AI_MODEL ?? DEFAULT_MODELS[provider];
-  const model = provider === "groq" ? groq(modelId) : anthropic(modelId);
-  return { model, modelId };
+  const env = resolveAnalyzeEnv();
+  return {
+    model: languageModelFor(env.provider, env.modelId),
+    modelId: env.modelId,
+    provider: env.provider,
+    upstream: env.upstream,
+  };
 }
 
 function formatHunk(hunk: Hunk): string {
@@ -156,14 +211,33 @@ async function callModel(
   }
 }
 
+function successResult(
+  changeModel: ChangeModel,
+  resolved: { modelId: string; provider: AnalyzeProvider; upstream: string | undefined },
+  attempt: number,
+  usage: LanguageModelUsage,
+  packed: PackedHunks,
+): AnalyzeResult {
+  return {
+    changeModel,
+    model: resolved.modelId,
+    provider: resolved.provider,
+    upstream: resolved.upstream,
+    attempts: attempt,
+    usage,
+    truncated: packed.truncated,
+    omittedFiles: packed.omittedFiles,
+  };
+}
+
 export async function analyze(input: AnalyzeInput, opts?: AnalyzeOptions): Promise<AnalyzeResult> {
   const packed = packHunks(input.hunks);
-  const { model, modelId } = resolveModel(opts);
+  const resolved = resolveModel(opts);
   let usage = emptyUsage();
   let feedback: string | undefined;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const call = await callModel(model, buildUserPrompt(input, packed, feedback));
+    const call = await callModel(resolved.model, buildUserPrompt(input, packed, feedback));
     usage = addUsage(usage, call.usage);
     if ("error" in call) {
       feedback = call.error;
@@ -187,14 +261,7 @@ export async function analyze(input: AnalyzeInput, opts?: AnalyzeOptions): Promi
       continue;
     }
 
-    return {
-      changeModel: parsed.data,
-      model: modelId,
-      attempts: attempt,
-      usage,
-      truncated: packed.truncated,
-      omittedFiles: packed.omittedFiles,
-    };
+    return successResult(parsed.data, resolved, attempt, usage, packed);
   }
 
   throw new Error(`analyze failed after ${MAX_ATTEMPTS} attempts: ${feedback ?? "unknown error"}`);
