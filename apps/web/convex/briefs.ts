@@ -5,6 +5,7 @@ import {
   parseDiff,
   parsePrUrl,
   scorePrediction,
+  toReadHunks,
   type ChangeModel,
   type Hunk,
   type HunkKind,
@@ -202,6 +203,41 @@ async function loadCitedHunks(
   return hunks;
 }
 
+async function loadKeyHunkRows(
+  ctx: QueryCtx,
+  changeModelId: Id<"changeModels">,
+  keyHunks: ChangeModel["keyHunks"],
+) {
+  const rows: {
+    hunkId: string;
+    file: string;
+    oldStart: number;
+    oldLines: number;
+    newStart: number;
+    newLines: number;
+    text: string;
+  }[] = [];
+  for (const { hunkId } of keyHunks) {
+    const row = await ctx.db
+      .query("hunks")
+      .withIndex("by_changeModelId_and_hunkId", (q) =>
+        q.eq("changeModelId", changeModelId).eq("hunkId", hunkId),
+      )
+      .unique();
+    if (!row) continue;
+    rows.push({
+      hunkId: row.hunkId,
+      file: row.file,
+      oldStart: row.oldStart,
+      oldLines: row.oldLines,
+      newStart: row.newStart,
+      newLines: row.newLines,
+      text: row.text,
+    });
+  }
+  return rows;
+}
+
 async function loadAllHunks(
   ctx: QueryCtx,
   changeModelId: Id<"changeModels">,
@@ -338,6 +374,23 @@ export const getBrief = query({
       omittedFiles: doc.omittedFiles,
       createdAt: doc.createdAt,
       hunks: cited,
+    };
+  },
+});
+
+/** Read screen: key hunks only — never ships expectedAnswer. */
+export const getReadView = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return null;
+    const doc = await ctx.db.get(session.changeModelId);
+    if (!doc) return null;
+    const model = parseStoredModel(doc.model);
+    const hunkRows = await loadKeyHunkRows(ctx, session.changeModelId, model.keyHunks);
+    return {
+      title: doc.title ?? "",
+      hunks: toReadHunks(model.keyHunks, hunkRows),
     };
   },
 });

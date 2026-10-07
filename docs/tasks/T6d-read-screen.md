@@ -1,9 +1,9 @@
 ---
 id: T6d
 title: Read screen
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/10"
 depends: [T6c]
 ---
 
@@ -65,3 +65,8 @@ response for the Read page has no `expectedAnswer`.
   typed props.
 
 ## Outcome
+Added pure `toReadHunks` / `toReadLines` / `hunkRangeLabel` in core, a `getReadView` query that
+returns only `{ title, hunks }` (no `expectedAnswer`), and the Read UI in `BriefChrome` with an
+Answer placeholder for empty/no-read and post-read navigation. Why: the brief’s Read step needs
+ranked key hunks one screen at a time without leaking model answers to the browser. Risk: empty
+or missing key-hunk rows skip silently and can send users straight to Answer with `noRead=1`.
