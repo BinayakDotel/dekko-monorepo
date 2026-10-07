@@ -1,0 +1,44 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderRevealSvg > matches snapshot for the fixture model 1`] = `
+"<svg viewBox="-8 -8 390 316" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Change map">
+<style>.nl{font-family:var(--font-sans,var(--font,"Instrument Sans",system-ui,sans-serif));font-size:12.5px;font-weight:600;text-anchor:middle;fill:var(--ink,#1b2430)}.ns{font-family:var(--font-sans,var(--font,"Instrument Sans",system-ui,sans-serif));font-size:10.5px;text-anchor:middle;fill:var(--muted,#6b7480)}.bt{font-family:var(--font-sans,var(--font,"Instrument Sans",system-ui,sans-serif));font-size:10px;font-weight:700;text-anchor:middle;fill:#fff}.reveal-edge-label{font-family:var(--font-sans,var(--font,"Instrument Sans",system-ui,sans-serif));font-size:10px;text-anchor:middle;fill:var(--muted,#6b7480)}.n{cursor:pointer}.n-add rect{fill:var(--ok-soft,#e3f5ea);stroke:var(--ok,#1e7a4f);stroke-width:1.5}.n-mod rect{fill:var(--warn-soft,#fff3d9);stroke:var(--warn,#b45309);stroke-width:1.5}.n-rem rect{fill:var(--bad-soft,#fde4e4);stroke:var(--bad,#b91c1c);stroke-width:1.5}.n-ctx rect{fill:var(--field,#f3f4f1);stroke:var(--line,#d9ded9);stroke-width:1.5}.b-hit{fill:var(--ok,#1e7a4f)}.b-miss{fill:var(--bad,#b91c1c)}.b-false{fill:var(--warn,#b45309)}.b-hide{display:none}</style>
+<defs><marker id="reveal-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="currentColor" stroke-width="1.4"/></marker></defs>
+<g class="reveal-edges" stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#reveal-arrow)"><path data-edge-id="audit-log→notification-queue:publishes" d="M 282.50 176.00 L 282.50 204.00 L 282.50 232.00" fill="none" /><text x="282.50" y="212.00" class="reveal-edge-label">publishes</text><path data-edge-id="ledger-service→payment-repository:writes" d="M 91.50 176.00 L 91.50 204.00 L 91.50 232.00" fill="none" stroke-dasharray="5 4" /><text x="91.50" y="212.00" class="reveal-edge-label">writes</text><path data-edge-id="refunds-controller→audit-log:writes" d="M 232.98 68.00 L 282.50 96.00 L 282.50 124.00" fill="none" /><text x="282.50" y="104.00" class="reveal-edge-label">writes</text><path data-edge-id="refunds-controller→ledger-service:calls" d="M 141.02 68.00 L 91.50 96.00 L 91.50 124.00" fill="none" /><text x="91.50" y="104.00" class="reveal-edge-label">calls</text></g>
+<g class="reveal-nodes"><g class="n n-mod" data-node-id="audit-log" data-badge="b-miss" role="button" tabindex="0">
+  <rect x="222.50" y="124.00" width="120.00" height="52.00" rx="10"/>
+  <text x="282.50" y="146.00" class="nl">AuditLog</text>
+  <text x="282.50" y="163.00" class="ns">changed</text>
+  <circle cx="338.50" cy="128.00" r="8" class="b-miss"/>
+  <text x="338.50" y="131.00" class="bt b-miss">!</text>
+</g>
+<g class="n n-mod" data-node-id="ledger-service" data-badge="b-hit" role="button" tabindex="0">
+  <rect x="30.50" y="124.00" width="122.00" height="52.00" rx="10"/>
+  <text x="91.50" y="146.00" class="nl">LedgerService</text>
+  <text x="91.50" y="163.00" class="ns">changed</text>
+  <circle cx="148.50" cy="128.00" r="8" class="b-hit"/>
+  <text x="148.50" y="131.00" class="bt b-hit">✓</text>
+</g>
+<g class="n n-mod" data-node-id="notification-queue" data-badge="b-hide" role="button" tabindex="0">
+  <rect x="207.00" y="232.00" width="151.00" height="52.00" rx="10"/>
+  <text x="282.50" y="254.00" class="nl">NotificationQueue</text>
+  <text x="282.50" y="271.00" class="ns">changed</text>
+  <circle cx="354.00" cy="236.00" r="8" class="b-hide"/>
+  <text x="354.00" y="239.00" class="bt b-hide b-hide"></text>
+</g>
+<g class="n n-ctx" data-node-id="payment-repository" data-badge="b-false" role="button" tabindex="0">
+  <rect x="16.00" y="232.00" width="151.00" height="52.00" rx="10"/>
+  <text x="91.50" y="254.00" class="nl">PaymentRepository</text>
+  <text x="91.50" y="271.00" class="ns">unchanged</text>
+  <circle cx="163.00" cy="236.00" r="8" class="b-false"/>
+  <text x="163.00" y="239.00" class="bt b-false">?</text>
+</g>
+<g class="n n-add" data-node-id="refunds-controller" data-badge="b-hit" role="button" tabindex="0">
+  <rect x="111.50" y="16.00" width="151.00" height="52.00" rx="10"/>
+  <text x="187.00" y="38.00" class="nl">RefundsController</text>
+  <text x="187.00" y="55.00" class="ns">new</text>
+  <circle cx="258.50" cy="20.00" r="8" class="b-hit"/>
+  <text x="258.50" y="23.00" class="bt b-hit">✓</text>
+</g></g>
+</svg>"
+`;
