@@ -1,7 +1,7 @@
 ---
 id: T4b
 title: analysisRuns table + costUsd
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/18"
 depends: [T4a]
