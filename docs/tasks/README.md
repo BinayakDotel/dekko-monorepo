@@ -14,7 +14,7 @@
 | T7a | gradeAnswer core (grade + prompt + scoreAnswers) | done | https://github.com/BinayakDotel/dekko-monorepo/pull/11 |
 | T7b | gradeAnswer action + Answer screen | done | https://github.com/BinayakDotel/dekko-monorepo/pull/12 |
 | T7c | Key-hunk focus ranges and sharper why lines | done | https://github.com/BinayakDotel/dekko-monorepo/pull/13 |
-| T8a | Reveal layout + SVG (core) | in review | https://github.com/BinayakDotel/dekko-monorepo/pull/14 |
+| T8a | Reveal layout + SVG (core) | done | https://github.com/BinayakDotel/dekko-monorepo/pull/14 |
 | T8b | Reveal + done screens (Convex + UI) | todo | |
 | T9 | Dogfood week | todo | |
 

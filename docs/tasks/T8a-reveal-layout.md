@@ -1,7 +1,7 @@
 ---
 id: T8a
 title: Reveal layout + SVG (core)
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/14"
 depends: [T7]
