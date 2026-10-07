@@ -13,6 +13,7 @@ export {
   type GradeOptions,
   type GradeResult,
 } from "./ai/grade";
+export { costUsd, priceKey, type CostUsdInput, type PriceKeyInput } from "./cost";
 export { formatElapsed } from "./elapsed";
 export { parsePrUrl, type ParsedPrUrl } from "./github";
 export { edgeTargetId } from "./reveal/ids";
