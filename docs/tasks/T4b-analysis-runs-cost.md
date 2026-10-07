@@ -1,9 +1,9 @@
 ---
 id: T4b
 title: analysisRuns table + costUsd
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/18"
 depends: [T4a]
 ---
 
@@ -38,3 +38,8 @@ Persist every successful `analyze` call in an append-only `analysisRuns` table s
 - **Known gap (note in Outcome):** a run that fails all 3 attempts throws without returning usage, so failed runs aren’t costed.
 
 ## Outcome
+Added `priceKey` / `costUsd` in `@dekko/core` (OpenRouter CoreWeave pin only) and an append-only `analysisRuns` table written in the same `insertBrief` mutation as the brief. Force re-run still deletes only the brief/hunks; historical runs stay for T9.
+
+Why: T9 needs per-PR cost history that survives brief recreate; dollars stay recomputed from tokens so price-table edits reprice history.
+
+Risk: runs that fail all 3 analyze attempts throw with no usage, so they are not costed (known gap). Manual Verify still needed against OpenRouter’s activity page for reasoning/undefined token undercount.

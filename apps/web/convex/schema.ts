@@ -9,6 +9,13 @@ export const answerDoc = v.object({
   lineRef: v.object({ hunkId: v.string(), line: v.number() }),
 });
 
+/** Required token counts stored on analysisRuns (dollars recomputed via costUsd). */
+export const analysisRunUsage = v.object({
+  inputTokens: v.number(),
+  outputTokens: v.number(),
+  totalTokens: v.number(),
+});
+
 export default defineSchema({
   changeModels: defineTable({
     repo: v.string(),
@@ -77,4 +84,18 @@ export default defineSchema({
     note: v.string(),
     createdAt: v.number(),
   }).index("by_sessionId", ["sessionId"]),
+
+  /** Append-only cost history; deleteBrief never touches these rows. */
+  analysisRuns: defineTable({
+    repo: v.string(),
+    prNumber: v.number(),
+    headSha: v.string(),
+    briefId: v.id("changeModels"),
+    provider: v.string(),
+    upstream: v.optional(v.string()),
+    model: v.string(),
+    attempts: v.number(),
+    usage: analysisRunUsage,
+    at: v.number(),
+  }).index("by_pr", ["repo", "prNumber"]),
 });

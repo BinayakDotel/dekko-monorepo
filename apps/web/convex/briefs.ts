@@ -27,7 +27,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { answerDoc } from "./schema";
+import { analysisRunUsage, answerDoc } from "./schema";
 
 const fileKind = v.union(
   v.literal("added"),
@@ -322,6 +322,10 @@ export const insertBrief = internalMutation({
     truncated: v.boolean(),
     omittedFiles: v.array(v.string()),
     hunks: v.array(hunkDoc),
+    provider: v.string(),
+    upstream: v.optional(v.string()),
+    attempts: v.number(),
+    runUsage: analysisRunUsage,
   },
   handler: async (ctx, args): Promise<Id<"changeModels">> => {
     const model = parseStoredModel(args.model);
@@ -342,6 +346,19 @@ export const insertBrief = internalMutation({
     for (const hunk of args.hunks) {
       await ctx.db.insert("hunks", { changeModelId, ...hunk });
     }
+    const upstream = args.upstream || undefined;
+    await ctx.db.insert("analysisRuns", {
+      repo: args.repo,
+      prNumber: args.prNumber,
+      headSha: args.headSha,
+      briefId: changeModelId,
+      provider: args.provider,
+      ...(upstream !== undefined ? { upstream } : {}),
+      model: args.modelId,
+      attempts: args.attempts,
+      usage: args.runUsage,
+      at: Date.now(),
+    });
     return changeModelId;
   },
 });
@@ -710,6 +727,14 @@ export const analyzePr = action({
       truncated: result.truncated,
       omittedFiles: result.omittedFiles,
       hunks: toHunkRows(hunks),
+      provider: result.provider,
+      ...(result.upstream ? { upstream: result.upstream } : {}),
+      attempts: result.attempts,
+      runUsage: {
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
+        totalTokens: result.usage.totalTokens ?? 0,
+      },
     });
     return changeModelId;
   },
