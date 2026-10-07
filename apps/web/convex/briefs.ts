@@ -480,6 +480,16 @@ export const gradeAnswer = action({
   },
 });
 
+function hunkPayload(hunk: StoredHunk | undefined) {
+  if (!hunk) return null;
+  return {
+    id: hunk.id,
+    file: hunk.file,
+    newStart: hunk.newStart,
+    text: hunk.text,
+  };
+}
+
 /** Answer screen: questions and stored grades — never ships expectedAnswer. */
 export const getAnswerView = query({
   args: { sessionId: v.id("sessions") },
@@ -492,16 +502,29 @@ export const getAnswerView = query({
       session.changeModelId,
       session.answers.map((a) => a.lineRef.hunkId),
     );
+    const corrections = await ctx.db
+      .query("corrections")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", args.sessionId))
+      .collect();
+    const disputedGrades = new Set(
+      corrections.filter((c) => c.target === "grade").map((c) => c.targetId),
+    );
     return {
       title: doc.title ?? "",
       questions: model.questions.map((q) => ({ id: q.id, kind: q.kind, text: q.text })),
-      answers: session.answers.map((a) => ({
-        questionId: a.questionId,
-        text: a.text,
-        verdict: a.verdict,
-        explanation: a.explanation,
-        ref: formatLineRef(a.lineRef, refHunks),
-      })),
+      answers: session.answers.map((a) => {
+        const hunk = refHunks.find((h) => h.id === a.lineRef.hunkId);
+        return {
+          questionId: a.questionId,
+          text: a.text,
+          verdict: a.verdict,
+          explanation: a.explanation,
+          ref: hunk ? formatLineRef(a.lineRef, [hunk]) : null,
+          hunkId: a.lineRef.hunkId,
+          hunk: hunkPayload(hunk),
+          gradeDisputed: disputedGrades.has(a.questionId),
+        };
+      }),
     };
   },
 });
@@ -605,6 +628,13 @@ export const addCorrection = mutation({
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
     if (!session) throw new Error("session not found");
+    const existing = await ctx.db
+      .query("corrections")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", args.sessionId))
+      .collect();
+    if (existing.some((c) => c.target === args.target && c.targetId === args.targetId)) {
+      return;
+    }
     await ctx.db.insert("corrections", {
       sessionId: args.sessionId,
       target: args.target,
@@ -622,6 +652,27 @@ export const completeSession = mutation({
     if (!session) throw new Error("session not found");
     if (session.completedAt !== undefined) return;
     await ctx.db.patch(args.sessionId, { completedAt: Date.now() });
+  },
+});
+
+/** Done screen: requires completedAt; never ships expectedAnswer. */
+export const getDoneView = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const loaded = await loadSessionModel(ctx, args.sessionId);
+    if (!loaded) return null;
+    const { session, doc, model } = loaded;
+    if (session.completedAt === undefined) return null;
+    return {
+      title: doc.title ?? "",
+      score: session.score ?? 0,
+      questionCount: model.questions.length,
+      edgeCase: model.edgeCase,
+      elapsedMs:
+        session.startedAt !== undefined
+          ? session.completedAt - session.startedAt
+          : null,
+    };
   },
 });
 

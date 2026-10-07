@@ -1,12 +1,13 @@
 "use client";
 
 import type { Verdict } from "@dekko/core";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { BriefChrome } from "../../../../../components/BriefChrome";
+import { EvidenceSheet, type EvidenceHunk } from "../../../../../components/EvidenceSheet";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -21,6 +22,9 @@ const VERDICT_UI: Record<Verdict, { label: string; className: string }> = {
 
 const PRIMARY_BTN =
   "inline-flex items-center rounded-btn bg-accent text-accent-ink font-semibold text-[0.9rem] px-[1.1rem] py-[0.6rem] disabled:opacity-50 disabled:cursor-not-allowed";
+
+const LINK_BTN =
+  "text-accent underline underline-offset-[3px] text-[0.9rem] bg-transparent border-0 p-0 cursor-pointer font-sans disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline";
 
 function clampIndex(raw: string, total: number): number | null {
   if (total <= 0) return null;
@@ -38,13 +42,60 @@ function LoadingStatus() {
   );
 }
 
-function Feedback({ answer }: { answer: StoredAnswer }) {
+function Toast({ message }: { message: string | null }) {
+  if (!message) return null;
+  return (
+    <div
+      role="status"
+      className="fixed left-1/2 bottom-[calc(72px+env(safe-area-inset-bottom,0px))] z-40 -translate-x-1/2 bg-ink text-surface px-4 py-[0.6rem] rounded-md text-[0.88rem] max-w-[90vw] shadow-md"
+    >
+      {message}
+    </div>
+  );
+}
+
+function useToast() {
+  const [toast, setToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 2600);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+  return { toast, setToast };
+}
+
+function SeeRefButton({
+  refLabel,
+  hunk,
+  onSeeRef,
+}: {
+  refLabel: string;
+  hunk: EvidenceHunk;
+  onSeeRef: (hunk: EvidenceHunk) => void;
+}) {
+  return (
+    <button type="button" onClick={() => onSeeRef(hunk)} className={LINK_BTN}>
+      See {refLabel}
+    </button>
+  );
+}
+
+function Feedback({
+  answer,
+  onSeeRef,
+}: {
+  answer: StoredAnswer;
+  onSeeRef: (hunk: EvidenceHunk) => void;
+}) {
   const ui = VERDICT_UI[answer.verdict];
+  const { hunk, ref: refLabel } = answer;
   return (
     <div className={`rounded-md px-4 py-[0.85rem] mb-[1.4rem] text-[0.92rem] ${ui.className}`}>
       <b className="block mb-[0.15rem]">{ui.label}</b>
       {answer.explanation}{" "}
-      <span className="font-mono text-[0.82rem]">{answer.ref}</span>
+      {hunk && refLabel ? (
+        <SeeRefButton refLabel={refLabel} hunk={hunk} onSeeRef={onSeeRef} />
+      ) : null}
     </div>
   );
 }
@@ -56,6 +107,43 @@ function NextLink({ sessionId, index, total }: { sessionId: string; index: numbe
     <Link href={href} className={PRIMARY_BTN}>
       {last ? "Show me the map" : "Next question"}
     </Link>
+  );
+}
+
+function useDispute(sessionId: Id<"sessions">, questionId: string, onToast: (msg: string) => void) {
+  const addCorrection = useMutation(api.briefs.addCorrection);
+  const [busy, setBusy] = useState(false);
+  function dispute() {
+    if (busy) return;
+    setBusy(true);
+    void addCorrection({
+      sessionId,
+      target: "grade",
+      targetId: questionId,
+      note: "Marked wrong",
+    })
+      .then(() => onToast("Recorded: you disputed this grade."))
+      .finally(() => setBusy(false));
+  }
+  return { dispute, busy };
+}
+
+function DisputeLink({
+  sessionId,
+  questionId,
+  disputed,
+  onToast,
+}: {
+  sessionId: Id<"sessions">;
+  questionId: string;
+  disputed: boolean;
+  onToast: (msg: string) => void;
+}) {
+  const { dispute, busy } = useDispute(sessionId, questionId, onToast);
+  return (
+    <button type="button" disabled={disputed || busy} className={LINK_BTN} onClick={dispute}>
+      This grade is wrong
+    </button>
   );
 }
 
@@ -91,15 +179,53 @@ function GradeError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+function GradedActions({
+  sessionId,
+  questionId,
+  index,
+  total,
+  disputed,
+  onToast,
+}: {
+  sessionId: Id<"sessions">;
+  questionId: string;
+  index: number;
+  total: number;
+  disputed: boolean;
+  onToast: (msg: string) => void;
+}) {
+  return (
+    <>
+      <NextLink sessionId={sessionId} index={index} total={total} />
+      <DisputeLink
+        sessionId={sessionId}
+        questionId={questionId}
+        disputed={disputed}
+        onToast={onToast}
+      />
+    </>
+  );
+}
+
 type AnswerFormProps = {
   sessionId: Id<"sessions">;
   question: { id: string; text: string };
   stored: StoredAnswer | undefined;
   index: number;
   total: number;
+  onSeeRef: (hunk: EvidenceHunk) => void;
+  onToast: (msg: string) => void;
 };
 
-function AnswerForm({ sessionId, question, stored, index, total }: AnswerFormProps) {
+function AnswerForm({
+  sessionId,
+  question,
+  stored,
+  index,
+  total,
+  onSeeRef,
+  onToast,
+}: AnswerFormProps) {
   const { submit, grading, failed } = useGrade(sessionId, question.id);
   const [text, setText] = useState("");
   return (
@@ -112,10 +238,17 @@ function AnswerForm({ sessionId, question, stored, index, total }: AnswerFormPro
         placeholder="Answer without looking at the code"
         className="w-full rounded-md border border-line bg-field text-ink px-[0.95rem] py-[0.75rem] font-sans resize-y min-h-[3.2rem] mb-[1.4rem]"
       />
-      {stored ? <Feedback answer={stored} /> : null}
+      {stored ? <Feedback answer={stored} onSeeRef={onSeeRef} /> : null}
       <div className="flex flex-wrap items-center gap-x-[1.2rem] gap-y-[0.8rem]">
         {stored ? (
-          <NextLink sessionId={sessionId} index={index} total={total} />
+          <GradedActions
+            sessionId={sessionId}
+            questionId={question.id}
+            index={index}
+            total={total}
+            disputed={stored.gradeDisputed}
+            onToast={onToast}
+          />
         ) : (
           <button
             type="button"
@@ -129,6 +262,26 @@ function AnswerForm({ sessionId, question, stored, index, total }: AnswerFormPro
       </div>
       {failed && !stored ? <GradeError onRetry={() => submit(text)} /> : null}
     </>
+  );
+}
+
+function RefSheet({
+  hunk,
+  onClose,
+}: {
+  hunk: EvidenceHunk | null;
+  onClose: () => void;
+}) {
+  return (
+    <EvidenceSheet
+      open={hunk !== null}
+      title={hunk?.file ?? ""}
+      confidence={null}
+      hunks={hunk ? [hunk] : []}
+      alreadyMarked={false}
+      showMarkWrong={false}
+      onClose={onClose}
+    />
   );
 }
 
@@ -146,6 +299,9 @@ function AnswerScreen({
   const question = view.questions[index]!;
   const total = view.questions.length;
   const stored = view.answers.find((a) => a.questionId === question.id);
+  const { toast, setToast } = useToast();
+  const [sheetHunk, setSheetHunk] = useState<EvidenceHunk | null>(null);
+
   return (
     <BriefChrome title={view.title} step={2} timeLabel={`about ${2 - Math.floor(index / 2)} min left`}>
       {noRead ? (
@@ -166,7 +322,11 @@ function AnswerScreen({
         stored={stored}
         index={index}
         total={total}
+        onSeeRef={setSheetHunk}
+        onToast={setToast}
       />
+      <RefSheet hunk={sheetHunk} onClose={() => setSheetHunk(null)} />
+      <Toast message={toast} />
     </BriefChrome>
   );
 }
