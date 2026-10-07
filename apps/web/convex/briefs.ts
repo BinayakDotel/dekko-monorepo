@@ -9,6 +9,7 @@ import {
   parsePrUrl,
   scorePrediction,
   toReadHunks,
+  toRevealModel,
   type ChangeModel,
   type Grade,
   type GradeInput,
@@ -555,6 +556,72 @@ export const getSession = query({
       startedAt: session.startedAt,
       completedAt: session.completedAt,
     };
+  },
+});
+
+/** Reveal screen: model without expectedAnswer + cited hunks + corrections. */
+export const getRevealView = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const loaded = await loadSessionModel(ctx, args.sessionId);
+    if (!loaded) return null;
+    const { session, doc, model } = loaded;
+    const cited = await loadCitedHunks(ctx, session.changeModelId, model);
+    const corrections = await ctx.db
+      .query("corrections")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", args.sessionId))
+      .collect();
+    return {
+      title: doc.title ?? "",
+      predictionScore: session.predictionScore,
+      model: toRevealModel(model),
+      hunks: cited.map((h) => ({
+        id: h.id,
+        file: h.file,
+        oldStart: h.oldStart,
+        oldLines: h.oldLines,
+        newStart: h.newStart,
+        newLines: h.newLines,
+        kind: h.kind,
+        text: h.text,
+      })),
+      corrections: corrections.map((c) => ({
+        target: c.target,
+        targetId: c.targetId,
+        note: c.note,
+        createdAt: c.createdAt,
+      })),
+    };
+  },
+});
+
+export const addCorrection = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    target: v.union(v.literal("node"), v.literal("edge"), v.literal("grade")),
+    targetId: v.string(),
+    note: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) throw new Error("session not found");
+    await ctx.db.insert("corrections", {
+      sessionId: args.sessionId,
+      target: args.target,
+      targetId: args.targetId,
+      note: args.note,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+export const completeSession = mutation({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) throw new Error("session not found");
+    if (session.completedAt !== undefined) return;
+    await ctx.db.patch(args.sessionId, { completedAt: Date.now() });
   },
 });
 

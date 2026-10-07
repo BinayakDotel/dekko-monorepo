@@ -1,9 +1,9 @@
 ---
 id: T8b
 title: Reveal screen (Convex + map + sheet)
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/15"
 depends: [T8a]
 ---
 
@@ -41,3 +41,6 @@ Manual on 3 PRs. `just check`.
 - **Core SVG follow-up (in this ticket):** Invisible wide hit path on edges (`data-edge-id`); clickable edge labels; surface-colored backing rect behind edge labels and badge glyphs (✓ ! ?); `<title>` on badges. Snapshot tests updated.
 
 ## Outcome
+Reveal screen loads session via `getRevealView` (model stripped of `expectedAnswer`), client-renders the T8a SVG map, teaching list (miss→fa→hit, path decoys list-only), evidence sheet with cited hunks / empty state, node/edge corrections, and Finish → `completeSession` → done stub. Core adds `toRevealModel`, `buildTeachingList` (sheet lookup for every drawn node/edge), and SVG hit-target polish (wide transparent edge paths, surface backing, badge titles).
+
+**Risk:** Manual verify on 3 PRs still required for hit targets and sheet empty-states; Convex has no automated tests yet.

@@ -1,5 +1,5 @@
 import dagre from "@dagrejs/dagre";
-import type { ChangeModel } from "../schema";
+import type { RevealModel } from "./toRevealModel";
 import { edgeTargetId } from "./ids";
 
 const NODE_HEIGHT = 52;
@@ -35,11 +35,11 @@ function nodeWidth(label: string): number {
   return Math.max(NODE_MIN_WIDTH, Math.ceil(label.length * CHAR_WIDTH + HORIZONTAL_PADDING));
 }
 
-export function sortedComponents(model: ChangeModel) {
+export function sortedComponents(model: RevealModel) {
   return [...model.components].sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export function sortedEdges(model: ChangeModel) {
+export function sortedEdges(model: RevealModel) {
   return [...model.edges].sort((a, b) => {
     const ka = `${a.from}\0${a.to}\0${a.relation}`;
     const kb = `${b.from}\0${b.to}\0${b.relation}`;
@@ -52,7 +52,7 @@ type DagreNodeBox = { x: number; y: number; width: number; height: number };
 type DagreEdgeGeom = { points?: Array<{ x: number; y: number }> };
 type DagreGraphSize = { width?: number; height?: number };
 
-function populateDagreGraph(model: ChangeModel): DagreGraph {
+function populateDagreGraph(model: RevealModel): DagreGraph {
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: "TB", nodesep: 40, ranksep: 56, marginx: 16, marginy: 16 });
   g.setDefaultEdgeLabel(() => ({}));
@@ -66,7 +66,7 @@ function populateDagreGraph(model: ChangeModel): DagreGraph {
   return g;
 }
 
-function layoutFromGraph(g: DagreGraph, model: ChangeModel): RevealLayout {
+function layoutFromGraph(g: DagreGraph, model: RevealModel): RevealLayout {
   const nodes: RevealNodeLayout[] = sortedComponents(model).map((c) => {
     const n = g.node(c.id) as DagreNodeBox;
     return {
@@ -97,7 +97,7 @@ function layoutFromGraph(g: DagreGraph, model: ChangeModel): RevealLayout {
   };
 }
 
-export function buildRevealGraph(model: ChangeModel): RevealLayout {
+export function buildRevealGraph(model: RevealModel): RevealLayout {
   const g = populateDagreGraph(model);
   dagre.layout(g);
   return layoutFromGraph(g, model);

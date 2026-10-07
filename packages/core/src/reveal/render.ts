@@ -1,4 +1,3 @@
-import type { ChangeModel } from "../schema";
 import type { PredictionScore } from "../predict";
 import type { RevealLayout } from "./layout";
 import {
@@ -11,11 +10,12 @@ import {
   type RevealEdgeMeta,
   type RevealNodeMeta,
 } from "./renderParts";
+import type { RevealModel } from "./toRevealModel";
 
 export type { RevealEdgeMeta, RevealNodeMeta } from "./renderParts";
 
 export type RenderRevealSvgInput = {
-  model: ChangeModel;
+  model: RevealModel;
   layout: RevealLayout;
   predictionScore: PredictionScore;
 };
