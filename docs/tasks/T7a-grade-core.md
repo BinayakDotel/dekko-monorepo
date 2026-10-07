@@ -1,7 +1,7 @@
 ---
 id: T7a
 title: gradeAnswer core (grade + prompt + scoreAnswers)
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/11"
 depends: [T6d]
