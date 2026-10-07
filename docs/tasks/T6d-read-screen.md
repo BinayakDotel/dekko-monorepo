@@ -1,8 +1,8 @@
 ---
 id: T6d
 title: Read screen
-status: todo
-base: T6c
+status: in progress
+base: main
 pr: ""
 depends: [T6c]
 ---
