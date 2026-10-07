@@ -1,12 +1,12 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-const answer = v.object({
+export const answerDoc = v.object({
   questionId: v.string(),
   text: v.string(),
   verdict: v.union(v.literal("right"), v.literal("partly"), v.literal("wrong")),
   explanation: v.string(),
-  lineRef: v.string(),
+  lineRef: v.object({ hunkId: v.string(), line: v.number() }),
 });
 
 export default defineSchema({
@@ -64,7 +64,7 @@ export default defineSchema({
       missed: v.array(v.string()),
       falseAlarms: v.array(v.string()),
     }),
-    answers: v.array(answer),
+    answers: v.array(answerDoc),
     score: v.optional(v.number()),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),

@@ -19,4 +19,8 @@
 # Lessons
 
 - 2026-10-06 Groq free tier allows 8k tokens per minute on gpt-oss-120b, so only small PRs fit. Dogfood runs on Anthropic; Groq stays for small Tier-1 calls.
+- 2026-10-07 `gt submit` from an agent cannot set the PR body: non-interactive mode skips the description editor, and `--cli --interactive` blocks on a prompt. With `gh` read-only, the human pastes the body (or the rules allow `gh pr edit --body-file`).
+- 2026-10-07 Bookkeeping commits from /take always go to main, even when the ticket's base is another branch; stash, switch, commit, switch back. Fixed in the skill.
+- 2026-10-07 All session functions (startSession, gradeAnswer, getSession…) are unauthenticated until F3 adds GitHub login and owner checks; session ids are unlisted, nothing more. Anyone with an id can spend grader tokens.
+- 2026-10-07 On this fixture PR (skills-marketplace#5) a new 123-line file became a single "key hunk", and the why lines described the code instead of its consequence. Led to T7c: focus ranges inside hunks, and why = consequence or risk.
 
