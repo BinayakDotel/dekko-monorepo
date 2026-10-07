@@ -1,7 +1,7 @@
 ---
 id: T8b
 title: Reveal screen (Convex + map + sheet)
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/15"
 depends: [T8a]
