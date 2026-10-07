@@ -1,7 +1,7 @@
 ---
 id: T6d
 title: Read screen
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/10"
 depends: [T6c]
