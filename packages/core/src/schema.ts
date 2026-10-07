@@ -29,11 +29,52 @@ export const EdgeSchema = z.object({
   confidence: ConfidenceSchema,
 });
 
-export const KeyHunkSchema = z.object({
-  hunkId: HunkIdSchema,
-  why: z.string().min(1),
-  rank: z.number().int().min(1),
-});
+function normalizeKeyHunkFocus(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const o = raw as Record<string, unknown>;
+  return {
+    ...o,
+    focusStart: o.focusStart === undefined ? null : o.focusStart,
+    focusEnd: o.focusEnd === undefined ? null : o.focusEnd,
+  };
+}
+
+export const KeyHunkSchema = z.preprocess(
+  normalizeKeyHunkFocus,
+  z
+    .object({
+      hunkId: HunkIdSchema,
+      why: z.string().min(1),
+      rank: z.number().int().min(1),
+      // Required-but-nullable: Groq structured outputs reject optional keys.
+      focusStart: z.number().int().nullable(),
+      focusEnd: z.number().int().nullable(),
+    })
+    .superRefine((k, ctx) => {
+      const hasStart = k.focusStart !== null;
+      const hasEnd = k.focusEnd !== null;
+      if (hasStart === hasEnd) return;
+      ctx.addIssue({
+        code: "custom",
+        path: [hasStart ? "focusEnd" : "focusStart"],
+        message: "focusStart and focusEnd must both be numbers or both null",
+      });
+    }),
+);
+
+/** Error if focus is invalid for the hunk's new-side range; otherwise null. */
+export function focusRangeError(
+  focus: { focusStart: number; focusEnd: number },
+  hunk: { newStart: number; newLines: number },
+): string | null {
+  if (hunk.newLines === 0) return "focus not allowed when newLines is 0 (pure deletion)";
+  if (focus.focusStart > focus.focusEnd) return "focusStart must be <= focusEnd";
+  const last = hunk.newStart + hunk.newLines - 1;
+  if (focus.focusStart < hunk.newStart || focus.focusEnd > last) {
+    return `focus must lie within ${hunk.newStart}–${last}`;
+  }
+  return null;
+}
 
 export const QuestionSchema = z.object({
   id: z.string().min(1),

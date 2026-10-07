@@ -30,7 +30,7 @@ function changeModelFor(hunkId: string): ChangeModel {
       },
     ],
     edges: [],
-    keyHunks: [{ hunkId, why: "Main edit.", rank: 1 }],
+    keyHunks: [{ hunkId, why: "Main edit.", rank: 1, focusStart: null, focusEnd: null }],
     questions: [
       { id: "q1", kind: "data-flow", text: "What flows?", expectedAnswer: "Data.", hunks: [hunkId] },
       { id: "q2", kind: "failure", text: "What fails?", expectedAnswer: "Errors.", hunks: [hunkId] },
@@ -99,6 +99,23 @@ describe("analyze", () => {
     expect(result.changeModel.keyHunks[0]!.hunkId).toBe(hunkId);
     expect(result.usage.inputTokens).toBe(20);
     expect(result.usage.outputTokens).toBe(40);
+  });
+
+  test("retries when a key hunk focus lies outside the hunk new range", async () => {
+    const hunks = loadFixtureHunks("small.diff");
+    const hunkId = hunks[0]!.id;
+    const bad = changeModelFor(hunkId);
+    bad.keyHunks[0] = {
+      hunkId,
+      why: "Reviewers may miss a broken path.",
+      rank: 1,
+      focusStart: 1,
+      focusEnd: 5,
+    };
+    const good = changeModelFor(hunkId);
+    const result = await analyze({ hunks }, { model: mockModel([bad, good]) });
+    expect(result.attempts).toBe(2);
+    expect(result.changeModel.keyHunks[0]!.focusStart).toBeNull();
   });
 
   test("retries when structured output is not valid JSON", async () => {

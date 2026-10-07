@@ -1,15 +1,16 @@
 "use client";
 
 import {
-  hunkRangeLabel,
-  toReadLines,
+  focusWindowCoversHunk,
+  visibleRangeLabel,
+  visibleReadLines,
   type ReadHunk,
   type ReadLine,
 } from "@dekko/core";
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import { BriefChrome } from "../../../../../components/BriefChrome";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -24,13 +25,20 @@ function WhyLead({ why }: { why: string }) {
   return <p className="text-[1.02rem] m-0 mb-[0.9rem]">{why}</p>;
 }
 
-function CodeBlock({ hunk }: { hunk: ReadHunk }) {
-  const lines = toReadLines(hunk);
+function CodeBlock({
+  hunk,
+  lines,
+  rangeLabel,
+}: {
+  hunk: ReadHunk;
+  lines: ReadLine[];
+  rangeLabel: string;
+}) {
   return (
     <div className="border border-line rounded-md overflow-hidden mb-[1.2rem] bg-surface">
       <div className="flex justify-between gap-4 px-[0.9rem] py-[0.45rem] font-mono text-[0.76rem] text-muted bg-field border-b border-line-2">
         <span>{hunk.file}</span>
-        <span>{hunkRangeLabel(hunk)}</span>
+        <span>{rangeLabel}</span>
       </div>
       <pre className="m-0 px-[0.9rem] py-[0.7rem] font-mono text-[0.78rem] leading-[1.6] overflow-x-auto">
         {lines.map((line, i) => (
@@ -46,14 +54,32 @@ function CodeBlock({ hunk }: { hunk: ReadHunk }) {
   );
 }
 
+function FocusToggle({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="text-accent underline underline-offset-[3px] text-[0.9rem] bg-transparent border-0 p-0 cursor-pointer font-sans"
+    >
+      {expanded ? "Show the focused lines" : "Show the whole hunk"}
+    </button>
+  );
+}
+
 function ReadNav({
   sessionId,
   index,
   total,
+  canToggleFocus,
+  expanded,
+  onToggleFocus,
 }: {
   sessionId: string;
   index: number;
   total: number;
+  canToggleFocus: boolean;
+  expanded: boolean;
+  onToggleFocus: () => void;
 }) {
   const last = index === total - 1;
   const nextHref = last
@@ -75,6 +101,7 @@ function ReadNav({
           Back
         </Link>
       ) : null}
+      {canToggleFocus ? <FocusToggle expanded={expanded} onToggle={onToggleFocus} /> : null}
     </div>
   );
 }
@@ -126,7 +153,9 @@ function ReadScreen({
   index: number;
 }) {
   const hunk = hunks[index]!;
-  const lines = toReadLines(hunk);
+  const [expanded, setExpanded] = useState(false);
+  const lines = visibleReadLines(hunk, expanded);
+  const canToggleFocus = !focusWindowCoversHunk(hunk);
   const mins = hunks.length - index + 1;
   return (
     <BriefChrome title={title} step={1} timeLabel={`about ${mins} min left`}>
@@ -134,8 +163,19 @@ function ReadScreen({
         Read {index + 1} of {hunks.length} · {lines.length} lines
       </p>
       <WhyLead why={hunk.why} />
-      <CodeBlock hunk={hunk} />
-      <ReadNav sessionId={sessionId} index={index} total={hunks.length} />
+      <CodeBlock
+        hunk={hunk}
+        lines={lines}
+        rangeLabel={visibleRangeLabel(hunk, lines, expanded)}
+      />
+      <ReadNav
+        sessionId={sessionId}
+        index={index}
+        total={hunks.length}
+        canToggleFocus={canToggleFocus}
+        expanded={expanded}
+        onToggleFocus={() => setExpanded((v) => !v)}
+      />
     </BriefChrome>
   );
 }
@@ -154,8 +194,10 @@ export default function ReadPage({
   if (view === null) notFound();
   const index = clampIndex(rawN, view.hunks.length);
   if (index === null || String(index) !== rawN) return <LoadingStatus />;
+  const hunk = view.hunks[index]!;
   return (
     <ReadScreen
+      key={`${index}-${hunk.hunkId}`}
       sessionId={sessionId}
       title={view.title}
       hunks={view.hunks}

@@ -28,7 +28,7 @@ function modelCiting(...hunkIds: string[]): ChangeModel {
         confidence: 0.8,
       },
     ],
-    keyHunks: [{ hunkId: primary, why: "Main change.", rank: 1 }],
+    keyHunks: [{ hunkId: primary, why: "Main change.", rank: 1, focusStart: null, focusEnd: null }],
     questions: [
       { id: "q1", kind: "data-flow", text: "a?", expectedAnswer: "a", hunks: [primary] },
       { id: "q2", kind: "failure", text: "b?", expectedAnswer: "b", hunks: [primary] },
@@ -120,6 +120,55 @@ describe("validateAgainstDiff", () => {
     expect(validateAgainstDiff(model, hunks)).toEqual({
       ok: false,
       unknownHunkIds: ["h99", "h42"],
+    });
+  });
+
+  test("accepts a key hunk whose focus lies inside the new range", () => {
+    const { hunks } = parseDiff(load("small"));
+    // h1: @@ -19,6 +19,19 @@
+    const model = modelCiting("h1");
+    model.keyHunks[0] = {
+      hunkId: "h1",
+      why: "Broken path may ship.",
+      rank: 1,
+      focusStart: 22,
+      focusEnd: 28,
+    };
+    expect(validateAgainstDiff(model, hunks)).toEqual({ ok: true });
+  });
+
+  test("rejects focus outside the hunk new range via a focus field", () => {
+    const { hunks } = parseDiff(load("small"));
+    const model = modelCiting("h1");
+    model.keyHunks[0] = {
+      hunkId: "h1",
+      why: "Broken path may ship.",
+      rank: 1,
+      focusStart: 1,
+      focusEnd: 5,
+    };
+    expect(validateAgainstDiff(model, hunks)).toEqual({
+      ok: false,
+      unknownHunkIds: [],
+      focus: expect.stringMatching(/h1/),
+    });
+  });
+
+  test("rejects focus on a pure deletion via a focus field", () => {
+    const { hunks } = parseDiff(load("medium"));
+    // medium h1: @@ -1,13 +0,0 @@
+    const model = modelCiting("h1");
+    model.keyHunks[0] = {
+      hunkId: "h1",
+      why: "Deleted rules still matter.",
+      rank: 1,
+      focusStart: 1,
+      focusEnd: 1,
+    };
+    expect(validateAgainstDiff(model, hunks)).toEqual({
+      ok: false,
+      unknownHunkIds: [],
+      focus: expect.stringMatching(/h1/),
     });
   });
 });

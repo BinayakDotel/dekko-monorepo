@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HunkIdSchema, type ChangeModel } from "./schema";
+import { focusRangeError, HunkIdSchema, type ChangeModel } from "./schema";
 
 export const HunkKindSchema = z.enum(["added", "modified", "removed", "renamed"]);
 
@@ -173,7 +173,7 @@ export function parseDiff(text: string): ParseDiffResult {
 
 export type ValidateAgainstDiffResult =
   | { ok: true }
-  | { ok: false; unknownHunkIds: string[] };
+  | { ok: false; unknownHunkIds: string[]; focus?: string };
 
 function citedHunkIds(model: ChangeModel): string[] {
   const ids: string[] = [];
@@ -182,6 +182,22 @@ function citedHunkIds(model: ChangeModel): string[] {
   for (const k of model.keyHunks) ids.push(k.hunkId);
   for (const q of model.questions) ids.push(...q.hunks);
   return ids;
+}
+
+function focusErrors(model: ChangeModel, hunks: readonly Hunk[]): string[] {
+  const byId = new Map(hunks.map((h) => [h.id, h]));
+  const messages: string[] = [];
+  for (const key of model.keyHunks) {
+    if (key.focusStart == null || key.focusEnd == null) continue;
+    const hunk = byId.get(key.hunkId);
+    if (!hunk) continue;
+    const err = focusRangeError(
+      { focusStart: key.focusStart, focusEnd: key.focusEnd },
+      hunk,
+    );
+    if (err) messages.push(`${key.hunkId}: ${err}`);
+  }
+  return messages;
 }
 
 export function validateAgainstDiff(
@@ -196,6 +212,12 @@ export function validateAgainstDiff(
     seen.add(id);
     unknownHunkIds.push(id);
   }
-  if (unknownHunkIds.length === 0) return { ok: true };
-  return { ok: false, unknownHunkIds };
+  const focusMsgs = focusErrors(model, hunks);
+  if (unknownHunkIds.length === 0 && focusMsgs.length === 0) return { ok: true };
+  const result: { ok: false; unknownHunkIds: string[]; focus?: string } = {
+    ok: false,
+    unknownHunkIds,
+  };
+  if (focusMsgs.length > 0) result.focus = focusMsgs.join("; ");
+  return result;
 }

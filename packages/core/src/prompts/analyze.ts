@@ -22,7 +22,14 @@ ChangeModel rules
   added | modified | removed | context. Non-context components need ≥1 hunk.
 - edges: from/to must be component ids that exist. Each edge needs ≥1 hunk and
   a relation from the closed enum (use other only when nothing else fits).
-- keyHunks: 1–3 items; ranks are unique and run 1..n; each why is one short line.
+- keyHunks: 1–3 items; ranks are unique and run 1..n.
+- Each keyHunk why is one sentence naming a consequence or risk for a
+  reviewer (what could go wrong or what they might miss), not a description
+  of what the code does.
+- focusStart / focusEnd (inclusive new-side line numbers) on each keyHunk:
+  both numbers or both null. When that hunk's newLines is greater than 14,
+  set a focus of 5–14 new lines covering the lines that matter. Use null/null
+  on short hunks and on pure deletions (newLines 0).
 - questions: exactly three — one data-flow, one failure, one debugging — each
   with expectedAnswer and ≥1 hunk.
 - summary: exactly three short strings. edgeCase: one concrete risk or edge case.
