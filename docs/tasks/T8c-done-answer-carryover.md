@@ -1,7 +1,7 @@
 ---
 id: T8c
 title: Done screen + answer carryover
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/16"
 depends: [T8b]
