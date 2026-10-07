@@ -1,7 +1,7 @@
 ---
 id: T4a
 title: OpenRouter provider in analyze
-status: in review
+status: done
 base: main
 pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/17"
 depends: [T4]
