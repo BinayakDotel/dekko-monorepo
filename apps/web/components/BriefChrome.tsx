@@ -2,19 +2,20 @@ import type { ReactNode } from "react";
 
 const STEP_COUNT = 4;
 
-export type BriefStep = 0 | 1 | 2 | 3;
+export type BriefStep = 0 | 1 | 2 | 3 | 4;
 
 type BriefChromeProps = {
   title: string;
-  /** Current brief step index. Prior steps render as done. */
+  /** Current brief step index. Prior steps render as done. At 4 all bars are done. */
   step: BriefStep;
-  timeLabel: string;
+  /** Omit when there is no elapsed/estimate label (e.g. done without startedAt). */
+  timeLabel?: string;
   children: ReactNode;
 };
 
 function stepClass(index: number, current: number): string {
   if (index < current) return "bg-ok";
-  if (index === current) return "bg-accent";
+  if (index === current && current < STEP_COUNT) return "bg-accent";
   return "bg-line";
 }
 
@@ -34,7 +35,9 @@ export function BriefChrome({ title, step, timeLabel, children }: BriefChromePro
             />
           ))}
         </span>
-        <span className="text-muted text-[0.78rem] whitespace-nowrap">{timeLabel}</span>
+        {timeLabel ? (
+          <span className="text-muted text-[0.78rem] whitespace-nowrap">{timeLabel}</span>
+        ) : null}
       </header>
       <main className="max-w-[var(--measure)] mx-auto p-[var(--pad-screen)]">{children}</main>
     </>

@@ -1,9 +1,9 @@
 ---
 id: T8c
 title: Done screen + answer carryover
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/16"
 depends: [T8b]
 ---
 
@@ -34,4 +34,5 @@ Manual on 3 PRs. `just check`.
 - **Answer carryover — See ref:** Extend `getAnswerView` with `hunkId` + cited hunk payload (reuse `loadHunksByIds`). “See ref” opens `EvidenceSheet` for that hunk. If hunkId does not resolve, hide the link (no empty sheet). **`EvidenceSheet`:** add a prop to hide “This is wrong” (See ref is not a node/edge correction). File count: five app files + core `formatElapsed` — no split.
 
 ## Outcome
+Shipped `getDoneView` + done screen (praise/close by score ≥ 2, `edgeCase`, home CTA, `formatElapsed`), answer-grade dispute + See-ref sheet (`showMarkWrong={false}`), and `addCorrection` server dedupe. Pure elapsed formatting lives in `@dekko/core` with unit tests. Risk: done is unreachable until `completeSession` runs; visiting `/done` early 404s by design.
 

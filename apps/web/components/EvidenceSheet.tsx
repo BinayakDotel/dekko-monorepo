@@ -16,8 +16,10 @@ export type EvidenceSheetProps = {
   confidence: number | null;
   hunks: EvidenceHunk[];
   alreadyMarked: boolean;
+  /** When false, hide the "This is wrong" control (e.g. See ref from answer). */
+  showMarkWrong?: boolean;
   onClose: () => void;
-  onMarkWrong: () => void;
+  onMarkWrong?: () => void;
 };
 
 function lineClass(kind: ReadLine["kind"]): string {
@@ -80,16 +82,39 @@ function ConfidenceRow({ confidence }: { confidence: number }) {
   );
 }
 
+function MarkWrong({
+  alreadyMarked,
+  onMarkWrong,
+}: {
+  alreadyMarked: boolean;
+  onMarkWrong?: () => void;
+}) {
+  if (alreadyMarked) {
+    return <p className="text-muted text-[0.9rem] m-0">Already marked wrong.</p>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={onMarkWrong}
+      className="text-accent underline underline-offset-[3px] text-[0.9rem] bg-transparent border-0 p-0 cursor-pointer font-sans"
+    >
+      This is wrong
+    </button>
+  );
+}
+
 function SheetBody({
   confidence,
   hunks,
   alreadyMarked,
+  showMarkWrong,
   onMarkWrong,
 }: {
   confidence: number | null;
   hunks: EvidenceHunk[];
   alreadyMarked: boolean;
-  onMarkWrong: () => void;
+  showMarkWrong: boolean;
+  onMarkWrong?: () => void;
 }) {
   return (
     <div className="px-[1.2rem] pt-4 pb-[1.3rem]">
@@ -99,17 +124,9 @@ function SheetBody({
       ) : (
         hunks.map((h, i) => <HunkBlock key={h.id} hunk={h} defaultOpen={i === 0} />)
       )}
-      {alreadyMarked ? (
-        <p className="text-muted text-[0.9rem] m-0">Already marked wrong.</p>
-      ) : (
-        <button
-          type="button"
-          onClick={onMarkWrong}
-          className="text-accent underline underline-offset-[3px] text-[0.9rem] bg-transparent border-0 p-0 cursor-pointer font-sans"
-        >
-          This is wrong
-        </button>
-      )}
+      {showMarkWrong ? (
+        <MarkWrong alreadyMarked={alreadyMarked} onMarkWrong={onMarkWrong} />
+      ) : null}
     </div>
   );
 }
@@ -120,6 +137,7 @@ export function EvidenceSheet({
   confidence,
   hunks,
   alreadyMarked,
+  showMarkWrong = true,
   onClose,
   onMarkWrong,
 }: EvidenceSheetProps) {
@@ -170,6 +188,7 @@ export function EvidenceSheet({
           confidence={confidence}
           hunks={hunks}
           alreadyMarked={alreadyMarked}
+          showMarkWrong={showMarkWrong}
           onMarkWrong={onMarkWrong}
         />
       </div>
