@@ -1,9 +1,9 @@
 ---
 id: T7b
 title: gradeAnswer action + Answer screen
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/12"
 depends: [T7a]
 ---
 
@@ -35,3 +35,9 @@ Manual on one PR session. `just check`.
 - The `?noRead=1` note from the placeholder stays.
 
 ## Outcome
+- Core `appendAnswer(answers, next, questionCount)` rejects a second answer for a question and returns `score` once every question is answered; unit-tested.
+- Schema `answer.lineRef` is `{ hunkId, line }`; the answer validator is exported from `schema.ts` and reused by `storeAnswer`.
+- `gradeAnswer` action: `loadGradeInput` (internal query, rejects already-answered or unknown questions before the model call) → core `grade()` → `storeAnswer` (internal mutation via `appendAnswer`). `getAnswerView` returns title, questions, and answers with `ref` from `formatLineRef`; no expectedAnswer.
+- Answer page matches V.answer: read-only after grading, ok/warn/bad feedback ("Correct." / "Partly right." / "Not quite."), mono `path:L42`, "Next question" / "Show me the map" (→ `/session/<id>/reveal`), inline retry on grader failure, `?noRead=1` note kept.
+- Follow-ups: no Convex tests (convex-test not installed); `clampIndex`/`LoadingStatus`/redirect hook are duplicated from the Read page (extract in a separate refactor).
+- Risk: `gradeAnswer` is public and does not check session ownership (same as existing functions), so anyone with a session id can spend grader tokens.

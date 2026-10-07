@@ -1,12 +1,17 @@
 import {
   analyze,
+  appendAnswer,
   buildChips,
   ChangeModelSchema,
+  formatLineRef,
+  grade,
   parseDiff,
   parsePrUrl,
   scorePrediction,
   toReadHunks,
   type ChangeModel,
+  type Grade,
+  type GradeInput,
   type Hunk,
   type HunkKind,
 } from "@dekko/core";
@@ -21,6 +26,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { answerDoc } from "./schema";
 
 const fileKind = v.union(
   v.literal("added"),
@@ -49,6 +55,8 @@ const hunkDoc = v.object({
   ),
   text: v.string(),
 });
+
+type GradeContext = Omit<GradeInput, "answer">;
 
 type GitHubPrJson = {
   title?: unknown;
@@ -238,6 +246,24 @@ async function loadKeyHunkRows(
   return rows;
 }
 
+async function loadHunksByIds(
+  ctx: QueryCtx,
+  changeModelId: Id<"changeModels">,
+  hunkIds: readonly string[],
+): Promise<StoredHunk[]> {
+  const hunks: StoredHunk[] = [];
+  for (const hunkId of new Set(hunkIds)) {
+    const row = await ctx.db
+      .query("hunks")
+      .withIndex("by_changeModelId_and_hunkId", (q) =>
+        q.eq("changeModelId", changeModelId).eq("hunkId", hunkId),
+      )
+      .unique();
+    if (row) hunks.push(toStoredHunk(row));
+  }
+  return hunks;
+}
+
 async function loadAllHunks(
   ctx: QueryCtx,
   changeModelId: Id<"changeModels">,
@@ -391,6 +417,90 @@ export const getReadView = query({
     return {
       title: doc.title ?? "",
       hunks: toReadHunks(model.keyHunks, hunkRows),
+    };
+  },
+});
+
+async function loadSessionModel(ctx: QueryCtx, sessionId: Id<"sessions">) {
+  const session = await ctx.db.get(sessionId);
+  if (!session) return null;
+  const doc = await ctx.db.get(session.changeModelId);
+  if (!doc) return null;
+  return { session, doc, model: parseStoredModel(doc.model) };
+}
+
+export const loadGradeInput = internalQuery({
+  args: { sessionId: v.id("sessions"), questionId: v.string() },
+  handler: async (ctx, args): Promise<GradeContext> => {
+    const loaded = await loadSessionModel(ctx, args.sessionId);
+    if (!loaded) throw new Error("session not found");
+    if (loaded.session.answers.some((a) => a.questionId === args.questionId)) {
+      throw new Error(`question "${args.questionId}" already answered`);
+    }
+    const question = loaded.model.questions.find((q) => q.id === args.questionId);
+    if (!question) throw new Error(`unknown question id "${args.questionId}"`);
+    return {
+      questionText: question.text,
+      expectedAnswer: question.expectedAnswer,
+      hunks: await loadHunksByIds(ctx, loaded.session.changeModelId, question.hunks),
+    };
+  },
+});
+
+export const storeAnswer = internalMutation({
+  args: { sessionId: v.id("sessions"), answer: answerDoc },
+  handler: async (ctx, args) => {
+    const loaded = await loadSessionModel(ctx, args.sessionId);
+    if (!loaded) throw new Error("session not found");
+    const { answers, score } = appendAnswer(
+      loaded.session.answers,
+      args.answer,
+      loaded.model.questions.length,
+    );
+    await ctx.db.patch(args.sessionId, { answers, score });
+  },
+});
+
+export const gradeAnswer = action({
+  args: { sessionId: v.id("sessions"), questionId: v.string(), text: v.string() },
+  handler: async (ctx, args): Promise<Grade> => {
+    const text = args.text.trim();
+    if (!text) throw new Error("answer must not be empty");
+    const input: GradeContext = await ctx.runQuery(internal.briefs.loadGradeInput, {
+      sessionId: args.sessionId,
+      questionId: args.questionId,
+    });
+    const { grade: graded } = await grade({ ...input, answer: text });
+    await ctx.runMutation(internal.briefs.storeAnswer, {
+      sessionId: args.sessionId,
+      answer: { questionId: args.questionId, text, ...graded },
+    });
+    return graded;
+  },
+});
+
+/** Answer screen: questions and stored grades — never ships expectedAnswer. */
+export const getAnswerView = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const loaded = await loadSessionModel(ctx, args.sessionId);
+    if (!loaded) return null;
+    const { session, doc, model } = loaded;
+    const refHunks = await loadHunksByIds(
+      ctx,
+      session.changeModelId,
+      session.answers.map((a) => a.lineRef.hunkId),
+    );
+    return {
+      title: doc.title ?? "",
+      questions: model.questions.map((q) => ({ id: q.id, kind: q.kind, text: q.text })),
+      answers: session.answers.map((a) => ({
+        questionId: a.questionId,
+        text: a.text,
+        verdict: a.verdict,
+        explanation: a.explanation,
+        ref: formatLineRef(a.lineRef, refHunks),
+      })),
     };
   },
 });

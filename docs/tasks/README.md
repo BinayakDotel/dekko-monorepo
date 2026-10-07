@@ -12,7 +12,7 @@
 | T6c | Brief chrome + Predict matches prototype | done | https://github.com/BinayakDotel/dekko-monorepo/pull/9 |
 | T6d | Read screen | done | https://github.com/BinayakDotel/dekko-monorepo/pull/10 |
 | T7a | gradeAnswer core (grade + prompt + scoreAnswers) | done | https://github.com/BinayakDotel/dekko-monorepo/pull/11 |
-| T7b | gradeAnswer action + Answer screen | in progress | |
+| T7b | gradeAnswer action + Answer screen | in review | https://github.com/BinayakDotel/dekko-monorepo/pull/12 |
 | T8 | Reveal screen SVG | todo | |
 | T9 | Dogfood week | todo | |
 
