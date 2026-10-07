@@ -26,7 +26,7 @@ function model(components: Component[]): ChangeModel {
     schemaVersion: 1,
     components,
     edges: [],
-    keyHunks: [{ hunkId: "h1", why: "Main edit.", rank: 1 }],
+    keyHunks: [{ hunkId: "h1", why: "Main edit.", rank: 1, focusStart: null, focusEnd: null }],
     questions: [
       { id: "q1", kind: "data-flow", text: "What flows?", expectedAnswer: "Data.", hunks: ["h1"] },
       { id: "q2", kind: "failure", text: "What fails?", expectedAnswer: "Errors.", hunks: ["h1"] },

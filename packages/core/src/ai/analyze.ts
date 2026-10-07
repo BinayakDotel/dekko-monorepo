@@ -178,7 +178,12 @@ export async function analyze(input: AnalyzeInput, opts?: AnalyzeOptions): Promi
 
     const check = validateAgainstDiff(parsed.data, packed.included);
     if (!check.ok) {
-      feedback = `unknown hunk ids: ${check.unknownHunkIds.join(", ")}`;
+      const parts: string[] = [];
+      if (check.unknownHunkIds.length > 0) {
+        parts.push(`unknown hunk ids: ${check.unknownHunkIds.join(", ")}`);
+      }
+      if (check.focus) parts.push(check.focus);
+      feedback = parts.join("\n");
       continue;
     }
 
