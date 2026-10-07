@@ -29,3 +29,23 @@ export {
   type RevealEdgeMeta,
   type RevealNodeMeta,
 } from "./reveal/render";
+export {
+  toRevealModel,
+  RevealModelSchema,
+  RevealQuestionSchema,
+  type RevealModel,
+  type RevealQuestion,
+} from "./reveal/toRevealModel";
+export {
+  buildTeachingList,
+  CitedHunkRefSchema,
+  TeachingKindSchema,
+  SheetEntrySchema,
+  TeachingListItemSchema,
+  type BuildTeachingListInput,
+  type BuildTeachingListResult,
+  type CitedHunkRef,
+  type SheetEntry,
+  type TeachingKind,
+  type TeachingListItem,
+} from "./reveal/teachingList";
