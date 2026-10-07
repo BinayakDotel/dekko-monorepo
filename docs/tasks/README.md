@@ -6,7 +6,8 @@
 | T2 | ChangeModel Zod schema | done | https://github.com/BinayakDotel/dekko-monorepo/pull/1 |
 | T3 | Diff parser and validateAgainstDiff | done | https://github.com/BinayakDotel/dekko-monorepo/pull/3 |
 | T4 | Model call analyze.ts | done | https://github.com/BinayakDotel/dekko-monorepo/pull/5 |
-| T4a | OpenRouter provider + persist usage | in progress | |
+| T4a | OpenRouter provider in analyze | in progress | |
+| T4b | analysisRuns table + costUsd | todo | |
 | T5 | Convex schema + analyzePr + getBrief | done | https://github.com/BinayakDotel/dekko-monorepo/pull/6 |
 | T6 | Predict backend (decoys, scoring, sessions) | done | https://github.com/BinayakDotel/dekko-monorepo/pull/7 |
 | T6b | Convex provider, URL form, Predict screen | done | https://github.com/BinayakDotel/dekko-monorepo/pull/8 |

@@ -4,7 +4,7 @@ title: Dogfood week
 status: todo
 base: main
 pr: ""
-depends: [T8c, T4a]
+depends: [T8c, T4b]
 ---
 
 ## Goal
