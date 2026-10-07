@@ -15,7 +15,7 @@
 | T7b | gradeAnswer action + Answer screen | done | https://github.com/BinayakDotel/dekko-monorepo/pull/12 |
 | T7c | Key-hunk focus ranges and sharper why lines | done | https://github.com/BinayakDotel/dekko-monorepo/pull/13 |
 | T8a | Reveal layout + SVG (core) | done | https://github.com/BinayakDotel/dekko-monorepo/pull/14 |
-| T8b | Reveal + done screens (Convex + UI) | todo | |
+| T8b | Reveal + done screens (Convex + UI) | in progress | |
 | T9 | Dogfood week | todo | |
 
 Tickets live in this folder as `<ID>-<slug>.md`. Lifecycle: `/take` → `/implement` → `/address` → `/done`.

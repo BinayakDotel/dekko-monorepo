@@ -1,7 +1,7 @@
 ---
 id: T8b
 title: Reveal + done screens (Convex + UI)
-status: todo
+status: in progress
 base: main
 pr: ""
 depends: [T8a]
