@@ -1,9 +1,9 @@
 ---
 id: T8a
 title: Reveal layout + SVG (core)
-status: in progress
+status: in review
 base: main
-pr: ""
+pr: "https://github.com/BinayakDotel/dekko-monorepo/pull/14"
 depends: [T7]
 ---
 
@@ -35,3 +35,7 @@ Deterministic dagre layout and SVG map generation from a `ChangeModel`, plus sta
 - **Out of scope for T8a:** Evidence sheet, Convex, list rows under the map, corrections, done screen.
 
 ## Outcome
+
+Added `@dekko/core` reveal pipeline: `buildRevealGraph` (dagre, sorted nodes/edges), `renderRevealSvg` (SVG + node/edge metadata with prediction badges and dashed low-confidence edges), and `edgeTargetId` for T8b corrections. Snapshot + repeat-run tests lock layout/SVG determinism on a fixed fixture.
+
+**Risk:** Dagre allows one routed path per `(from, to)` pair; if the model ever has multiple relations between the same components, they would share geometry until we adopt multigraph edge names.

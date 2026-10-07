@@ -14,3 +14,18 @@ export {
   type GradeResult,
 } from "./ai/grade";
 export { parsePrUrl, type ParsedPrUrl } from "./github";
+export { edgeTargetId } from "./reveal/ids";
+export {
+  buildRevealGraph,
+  type RevealEdgeLayout,
+  type RevealLayout,
+  type RevealNodeLayout,
+  type RevealPoint,
+} from "./reveal/layout";
+export {
+  renderRevealSvg,
+  type RenderRevealSvgInput,
+  type RenderRevealSvgResult,
+  type RevealEdgeMeta,
+  type RevealNodeMeta,
+} from "./reveal/render";
